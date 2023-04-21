@@ -83,6 +83,10 @@ class MyScene extends THREE.Scene {
 	this.cameraHAngle = 0.0;
 	this.cameraVAngle = 0.0;
 
+	this.cameraMovement = {
+		right: 0, left: 0, front: 0, back: 0
+	};
+
     /*
     // Para el control de cámara usamos una clase que ya tiene implementado los movimientos de órbita
     this.cameraControl = new TrackballControls (this.camera, this.renderer.domElement);
@@ -216,8 +220,7 @@ class MyScene extends THREE.Scene {
   {
 	if (event.which == 1) {
 
-		this.cameraMove = true;
-
+		this.cameraRotation = true;
 		this.mousePosition = { x: event.clientX, y: event.clientY };
 	}
   }
@@ -226,48 +229,14 @@ class MyScene extends THREE.Scene {
   {
 	if (event.which == 1) {
 		
-		this.cameraMove = false;
+		this.cameraRotation = false;
 	}
-  }
-
-  keyboardKeyPress (event)
-  {
-	var key = event.which || event.key;
-	var movement = {
-		right: 0, left: 0, front: 0, back: 0
-	};
-
-	console.log ("which=" + event.which);
-	console.log ("key=" + event.key);
-
-	switch (String.fromCharCode (key))
-	{
-		case 'W':
-			movement.front = 1;
-			break;
-		case 'A':
-			movement.left = 1;
-			break;
-		case 'S':
-			movement.back = 1;
-			break;
-		case 'D':
-			movement.right = 1;
-			break;
-	}
-
-	var xMove = movement.right - movement.left;
-	var yMove = movement.back - movement.front;
-
-	var rot = this.cameraObj.rotation.y + Math.atan2 (xMove, yMove);
-
-	this.cameraObj.position.x += Math.sin (rot);
-	this.cameraObj.position.z += Math.cos (rot);
   }
 
   onMouseMove (event)
   {
-	if (this.cameraMove) {
+	if (this.cameraRotation) {
+
 		this.mouseDelta = {
 			x: event.clientX - this.mousePosition.x,
 			y: event.clientY - this.mousePosition.y
@@ -284,10 +253,52 @@ class MyScene extends THREE.Scene {
 		var cameraSpeed = 3;
 		
 		this.cameraHAngle += cameraDelta.h*cameraSpeed;
-		this.cameraVAngle += cameraDelta.v*(cameraSpeed*(window.innerWidth/window.innerHeight));
+		this.cameraVAngle += cameraDelta.v*(cameraSpeed*(window.innerHeight/window.innerWidth));
 
 		this.camera.rotation.x = -this.cameraVAngle;
 		this.cameraObj.rotation.y = -this.cameraHAngle;
+	}
+  }
+
+  keyboardKeyDown (event)
+  {
+	this.key = event.which || event.key;
+
+	switch (String.fromCharCode (this.key).toUpperCase())
+	{
+		case 'W': this.cameraMovement.front = 1; break;
+		case 'A': this.cameraMovement.left = 1; break;
+		case 'S': this.cameraMovement.back = 1; break;
+		case 'D': this.cameraMovement.right = 1; break;
+	}
+  }
+  
+  keyboardKeyUp (event)
+  {
+	this.key = event.which || event.key;
+
+	switch (String.fromCharCode (this.key).toUpperCase())
+	{
+		case 'W': this.cameraMovement.front = 0; break;
+		case 'A': this.cameraMovement.left = 0; break;
+		case 'S': this.cameraMovement.back = 0; break;
+		case 'D': this.cameraMovement.right = 0; break;
+	}
+  }
+
+  updateCamera ()
+  {
+	var cameraMove = this.cameraMovement.right || this.cameraMovement.left || this.cameraMovement.front || this.cameraMovement.back;
+
+	if (cameraMove) {
+
+		var xMove = this.cameraMovement.right - this.cameraMovement.left;
+		var yMove = this.cameraMovement.back - this.cameraMovement.front;
+
+		var rot = this.cameraObj.rotation.y + Math.atan2 (xMove, yMove);
+
+		this.cameraObj.position.x += Math.sin (rot);
+		this.cameraObj.position.z += Math.cos (rot);
 	}
   }
 
@@ -298,6 +309,7 @@ class MyScene extends THREE.Scene {
     // Se actualizan los elementos de la escena para cada frame
     
     // Se actualiza la posición de la cámara según su controlador
+	this.updateCamera();
     //this.cameraControl.update();
     
     // Se actualiza el resto del modelo
@@ -325,7 +337,8 @@ $(function () {
   window.addEventListener ("mouseup", (event) => scene.onMouseUp (event));
   window.addEventListener ("mousemove", (event) => scene.onMouseMove (event));
 
-  window.addEventListener ("keypress", (event) => scene.keyboardKeyPress (event));
+  window.addEventListener ("keydown", (event) => scene.keyboardKeyDown (event));
+  window.addEventListener ("keyup", (event) => scene.keyboardKeyUp (event));
   
   // Que no se nos olvide, la primera visualización.
   scene.update();
