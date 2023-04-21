@@ -1,13 +1,10 @@
 // Clases de la biblioteca
-
 import * as THREE from '../libs/three.module.js'
 import { GUI } from '../libs/dat.gui.module.js'
 import { TrackballControls } from '../libs/TrackballControls.js'
 import { Stats } from '../libs/stats.module.js'
 
 // Clases de mi proyecto
-
-import { MyBox } from './MyBox.js'
 
  
 /// La clase fachada del modelo
@@ -81,7 +78,7 @@ class MyScene extends THREE.Scene {
     this.cameraControl = new TrackballControls (this.camera, this.renderer.domElement);
     // Se configuran las velocidades de los movimientos
     this.cameraControl.rotateSpeed = 5;
-    this.cameraControl.zoomSpeed = -2;
+    this.cameraControl.zoomSpeed = 2;
     this.cameraControl.panSpeed = 0.5;
     // Debe orbitar con respecto al punto de mira de la cámara
     this.cameraControl.target = look;
@@ -214,7 +211,6 @@ class MyScene extends THREE.Scene {
     this.cameraControl.update();
     
     // Se actualiza el resto del modelo
-    this.model.update();
     
     // Le decimos al renderizador "visualiza la escena que te indico usando la cámara que te estoy pasando"
     this.renderer.render (this, this.getCamera());
