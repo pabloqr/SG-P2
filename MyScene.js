@@ -219,8 +219,6 @@ class MyScene extends THREE.Scene {
 		this.cameraMove = true;
 
 		this.mousePosition = { x: event.clientX, y: event.clientY };
-		//console.log (this.mousePosition.x);
-		//console.log (this.mousePosition.y);
 	}
   }
 
@@ -230,6 +228,41 @@ class MyScene extends THREE.Scene {
 		
 		this.cameraMove = false;
 	}
+  }
+
+  keyboardKeyPress (event)
+  {
+	var key = event.which || event.key;
+	var movement = {
+		right: 0, left: 0, front: 0, back: 0
+	};
+
+	console.log ("which=" + event.which);
+	console.log ("key=" + event.key);
+
+	switch (String.fromCharCode (key))
+	{
+		case 'W':
+			movement.front = 1;
+			break;
+		case 'A':
+			movement.left = 1;
+			break;
+		case 'S':
+			movement.back = 1;
+			break;
+		case 'D':
+			movement.right = 1;
+			break;
+	}
+
+	var xMove = movement.right - movement.left;
+	var yMove = movement.back - movement.front;
+
+	var rot = this.cameraObj.rotation.y + Math.atan2 (xMove, yMove);
+
+	this.cameraObj.position.x += Math.sin (rot);
+	this.cameraObj.position.z += Math.cos (rot);
   }
 
   onMouseMove (event)
@@ -248,7 +281,7 @@ class MyScene extends THREE.Scene {
 			v: this.mouseDelta.y / window.innerHeight
 		};
 
-		var cameraSpeed = 5;
+		var cameraSpeed = 3;
 		
 		this.cameraHAngle += cameraDelta.h*cameraSpeed;
 		this.cameraVAngle += cameraDelta.v*(cameraSpeed*(window.innerWidth/window.innerHeight));
@@ -287,9 +320,12 @@ $(function () {
 
   // Se añaden los listener de la aplicación. En este caso, el que va a comprobar cuándo se modifica el tamaño de la ventana de la aplicación.
   window.addEventListener ("resize", () => scene.onWindowResize());
+
   window.addEventListener ("mousedown", (event) => scene.onMouseDown (event));
   window.addEventListener ("mouseup", (event) => scene.onMouseUp (event));
   window.addEventListener ("mousemove", (event) => scene.onMouseMove (event));
+
+  window.addEventListener ("keypress", (event) => scene.keyboardKeyPress (event));
   
   // Que no se nos olvide, la primera visualización.
   scene.update();
