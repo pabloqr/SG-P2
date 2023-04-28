@@ -12,11 +12,11 @@ class Church extends THREE.Object3D
 		var objectLoader = new OBJLoader ();
 
 		materialLoader.load (
-			"models/churchInterior.mtl",
+			"./models/churchInterior.mtl",
 			(materials) => {
 				objectLoader.setMaterials (materials);
 				objectLoader.load (
-					'models/churchInterior.obj',
+					'./models/churchInterior.obj',
 					(object) => {
 						this.add (object);
 					},
