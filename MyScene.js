@@ -34,6 +34,9 @@ class MyScene extends THREE.Scene {
     
     // Tendremos una cámara con un control de movimiento con el ratón
     this.createCamera ();
+
+    // Creamos reloj
+    this.clock = new THREE.Clock();
     
     // Un suelo 
     //this.createGround ();
@@ -75,17 +78,17 @@ class MyScene extends THREE.Scene {
     // Y hacia dónde mira
     //this.look = new THREE.Vector3 (0,0,0);
     //this.camera.lookAt(this.look);
-	this.cameraObj = new THREE.Object3D ();
-    this.cameraObj.position.set (20, 10, 20);
-	this.cameraObj.add (this.camera);
+	  this.cameraObj = new THREE.Object3D ();
+    this.cameraObj.position.set (0, 2, 0);
+	  this.cameraObj.add (this.camera);
     this.add (this.cameraObj);
 
-	this.cameraHAngle = 0.0;
-	this.cameraVAngle = 0.0;
+    this.cameraHAngle = 0.0;
+    this.cameraVAngle = 0.0;
 
-	this.cameraMovement = {
-		right: 0, left: 0, front: 0, back: 0
-	};
+    this.cameraMovement = {
+      right: 0, left: 0, front: 0, back: 0
+    };
 
     /*
     // Para el control de cámara usamos una clase que ya tiene implementado los movimientos de órbita
@@ -250,10 +253,10 @@ class MyScene extends THREE.Scene {
 			v: this.mouseDelta.y / window.innerHeight
 		};
 
-		var cameraSpeed = 3;
+		var cameraRotationSpeed = 3;
 		
-		this.cameraHAngle += cameraDelta.h*cameraSpeed;
-		this.cameraVAngle += cameraDelta.v*(cameraSpeed*(window.innerHeight/window.innerWidth));
+		this.cameraHAngle += cameraDelta.h*cameraRotationSpeed;
+		this.cameraVAngle += cameraDelta.v*(cameraRotationSpeed*(window.innerHeight/window.innerWidth));
 
 		this.camera.rotation.x = -this.cameraVAngle;
 		this.cameraObj.rotation.y = -this.cameraHAngle;
@@ -288,28 +291,31 @@ class MyScene extends THREE.Scene {
 
   updateCamera ()
   {
-	var cameraMove = this.cameraMovement.right || this.cameraMovement.left || this.cameraMovement.front || this.cameraMovement.back;
+    var cameraMoveSpeed = 20;
+    var cameraMove = this.cameraMovement.right || this.cameraMovement.left || this.cameraMovement.front || this.cameraMovement.back;
 
-	if (cameraMove) {
+    if (cameraMove) {
 
-		var xMove = this.cameraMovement.right - this.cameraMovement.left;
-		var yMove = this.cameraMovement.back - this.cameraMovement.front;
+      var xMove = this.cameraMovement.right - this.cameraMovement.left;
+      var yMove = this.cameraMovement.back - this.cameraMovement.front;
 
-		var rot = this.cameraObj.rotation.y + Math.atan2 (xMove, yMove);
+      var rot = this.cameraObj.rotation.y + Math.atan2 (xMove, yMove);
 
-		this.cameraObj.position.x += Math.sin (rot);
-		this.cameraObj.position.z += Math.cos (rot);
-	}
+      this.cameraObj.position.x += Math.sin (rot)*cameraMoveSpeed*this.deltaTime;
+      this.cameraObj.position.z += Math.cos (rot)*cameraMoveSpeed*this.deltaTime;
+    }
   }
 
   update () {
     
     if (this.stats) this.stats.update();
+
+    this.deltaTime = this.clock.getDelta();
     
     // Se actualizan los elementos de la escena para cada frame
     
     // Se actualiza la posición de la cámara según su controlador
-	this.updateCamera();
+	  this.updateCamera();
     //this.cameraControl.update();
     
     // Se actualiza el resto del modelo
