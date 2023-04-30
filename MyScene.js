@@ -5,6 +5,7 @@ import { TrackballControls } from '../libs/TrackballControls.js'
 import { Stats } from '../libs/stats.module.js'
 import { Church } from './Church.js';
 import { Object3D } from './libs/three.module.js';
+import { ChurchBench } from './ChurchBench.js';
 
 // Clases de mi proyecto
 
@@ -49,11 +50,18 @@ class MyScene extends THREE.Scene {
 		// Por último creamos el modelo.
 		// El modelo puede incluir su parte de la interfaz gráfica de usuario. Le pasamos la referencia a 
 		// la gui y el texto bajo el que se agruparán los controles de la interfaz que añada el modelo.
-		var church = new Church ();
-		this.add (church);
+		//var church = new Church ();
+		//this.add (church);
+
+		var bench = new ChurchBench ();
+		this.add (bench);
 
 		/*
 		var boundingBox = new THREE.Box3 ().setFromObject (church);
+		var boundingBoxHelper = new THREE.Box3Helper (boundingBox, 0xffff00);
+		this.add (boundingBoxHelper);
+		boundingBoxHelper.visible = true;
+
 		var vector = new THREE.Vector3 ();
 		boundingBox.getSize(vector);
 		console.log (vector);
