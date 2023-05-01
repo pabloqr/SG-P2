@@ -1,5 +1,6 @@
 # miscellaneous
 *.pdf
+*.ico
 
 # tests
 tests/*
