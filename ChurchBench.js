@@ -30,11 +30,16 @@ class ChurchBench extends THREE.Object3D {
 
 		// Construcción de la extrusión
 		var benchExtrudeOptions = {
-			
+			depth : 8,
+			steps : 2,
+			curveSegments : 4,
+			bevelEnabled : false
 		};
-		var benchPath = new THREE.ExtrudeGeometry (benchShape, benchExtrudeOptions);
+		var benchGeometry = new THREE.ExtrudeGeometry (benchShape, benchExtrudeOptions);
+		var benchMesh = new THREE.Mesh (benchGeometry, benchMaterial);
 
-		this.add (benchLine);
+		this.add (benchMesh);
+		//this.add (benchLine);
 	}
 }
 

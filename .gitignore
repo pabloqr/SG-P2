@@ -1,2 +1,5 @@
 # miscellaneous
 *.pdf
+
+# tests
+tests/*
