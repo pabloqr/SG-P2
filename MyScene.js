@@ -74,10 +74,10 @@ class MyScene extends THREE.Scene {
 		{
 			for(var j = -1; j < 2;j+=2)
 			{
-				var bench0 = new ChurchBench ();
+				var bench0 = new ChurchBench (48, 8);
 				bench0.position.set(benchSeparation*j,0,i*4.5-15);
 				bench0.rotation.set(0,Math.PI,0);
-				bench0.scale.set(benchScale*benchLength,benchScale,benchScale);
+				bench0.scale.set(benchScale,benchScale,benchScale);
 				this.add (bench0);
 			}
 

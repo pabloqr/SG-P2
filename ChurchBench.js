@@ -2,7 +2,7 @@ import * as THREE from './libs/three.module.js'
 import { CSG } from './libs/CSG-v2.js'
 
 class ChurchBench extends THREE.Object3D {
-	constructor (benchLong = 16)
+	constructor (benchLong = 16, benchResolution = 12)
 	{
 		super();
 
@@ -95,8 +95,8 @@ class Seat extends THREE.Object3D {
 		// Construcción de la extrusión
 		var seatExtrudeOptions = {
 			depth : seatOptions.long,
-			steps : 2,
-			curveSegments : 24,
+			steps : 1,
+			curveSegments : benchResolution,
 			bevelEnabled : false
 		};
 		var seatGeometry = new THREE.ExtrudeGeometry (seatShape, seatExtrudeOptions);
@@ -110,13 +110,14 @@ class Seat extends THREE.Object3D {
 }
 
 class Recliner extends THREE.Object3D {
-	constructor (reclinerLong)
+	constructor (reclinerLong, reclinerResolution)
 	{
 		super();
 
 		// Opciones del reclinatorio
 		var reclinerOptions = {
-			long : reclinerLong - 0.5
+			long : reclinerLong - 0.5,
+			resolution : reclinerResolution
 		};
 
 		var reclinerShape = new THREE.Shape ();
@@ -134,11 +135,11 @@ class Recliner extends THREE.Object3D {
 		// Construcción de la extrusión
 		var reclinerExtrudeOptions = {
 			depth : reclinerOptions.long,
-			steps : 2,
-			curveSegments : 24,
+			steps : 1,
+			curveSegments : reclinerOptions.resolution,
 			bevelThickness : 0.5,
 			bevelSize : 0.05,
-			bevelSegments: 24
+			bevelSegments: reclinerOptions.resolution
 		};
 		var reclinerGeometry = new THREE.ExtrudeGeometry (reclinerShape, reclinerExtrudeOptions);
 		reclinerGeometry.rotateY (Math.PI / 2.0);
@@ -191,10 +192,10 @@ class Lateral extends THREE.Object3D {
 		var lateralExtrudeOptions = {
 			depth : lateralOptions.long,
 			steps : 1,
-			curveSegments : 24,
+			curveSegments : benchResolution,
 			bevelThickness : 0.25,
 			bevelSize : 0.05,
-			bevelSegments: 24
+			bevelSegments: benchResolution
 		};
 		var lateralGeometry = new THREE.ExtrudeGeometry (lateralShape, lateralExtrudeOptions);
 		lateralGeometry.rotateY (Math.PI / 2.0);
