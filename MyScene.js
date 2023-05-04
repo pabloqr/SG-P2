@@ -8,7 +8,9 @@ import { Object3D } from './libs/three.module.js';
 // Clases de mi proyecto
 import { Church } from './Church.js';
 import { ChurchBench } from './ChurchBench.js';
-
+import { Clock } from './Clock.js';
+import { Column } from './Column.js';
+import { Fachade } from './Fachade.js';
 
 /// La clase fachada del modelo
 /**
@@ -51,10 +53,40 @@ class MyScene extends THREE.Scene {
 		// El modelo puede incluir su parte de la interfaz gráfica de usuario. Le pasamos la referencia a 
 		// la gui y el texto bajo el que se agruparán los controles de la interfaz que añada el modelo.
 		var church = new Church ();
-		var bench = new ChurchBench ();
+		// var bench = new ChurchBench ();
+		var clock = new Clock ();
+		var fachade = new Fachade ();
+
+		clock.position.set(29,0,2);
 		
+
+		for(var i = 0; i < 5; i++)
+		{
+			var columna = new Column ();
+			columna.position.set(0,0,i*9-15);
+			this.add (columna);
+		}
+
+		var benchScale = 0.2;
+		var benchLength = 4;
+		var benchSeparation = 10;
+		for(var i = 0; i < 10; i++)
+		{
+			for(var j = -1; j < 2;j+=2)
+			{
+				var bench0 = new ChurchBench ();
+				bench0.position.set(benchSeparation*j,0,i*4.5-15);
+				bench0.rotation.set(0,Math.PI,0);
+				bench0.scale.set(benchScale*benchLength,benchScale,benchScale);
+				this.add (bench0);
+			}
+
+		}
+
 		this.add (church);
-		this.add (bench);
+		// this.add (bench);
+		this.add (clock);
+		this.add (fachade);
 
 		/*
 		var boundingBox = new THREE.Box3 ().setFromObject (church);
