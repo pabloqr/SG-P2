@@ -11,19 +11,19 @@ class ChurchBench extends THREE.Object3D {
 
 		// Geometrías necesarias para construir el banco
 		// Asiento
-		var seatGeometry = new Seat (benchLong);
+		var seatGeometry = new Seat (benchLong, benchResolution);
 		seatGeometry.translate (0.0, 3.0, -0.5);
 
 		var seatMesh = new THREE.Mesh (seatGeometry, benchMaterial);
 		
 		// Reclinatorio
-		var reclinerGeometry = new Recliner (benchLong);
+		var reclinerGeometry = new Recliner (benchLong, benchResolution);
 		reclinerGeometry.translate (0.0, 1.0, -4.25);
 		
 		var reclinerMesh = new THREE.Mesh (reclinerGeometry, benchMaterial);
 		
 		// Laterales
-		var lateralGeometryLeft = new Lateral ();
+		var lateralGeometryLeft = new Lateral (benchResolution);
 		lateralGeometryLeft.translate (-benchLong/2.0, 0.0, 0.0);
 		var lateralGeometryRight = new Lateral ();
 		lateralGeometryRight.translate (benchLong/2.0, 0.0, 0.0);
@@ -57,13 +57,14 @@ class ChurchBench extends THREE.Object3D {
 }
 
 class Seat extends THREE.Object3D {
-	constructor (seatLong)
+	constructor (seatLong, seatResolution)
 	{
 		super();
 
 		// Opciones del banco
 		var seatOptions = {
-			long : seatLong
+			long : seatLong,
+			resolution : seatResolution
 		};
 
 		// Construcción del shape del banco
@@ -96,7 +97,7 @@ class Seat extends THREE.Object3D {
 		var seatExtrudeOptions = {
 			depth : seatOptions.long,
 			steps : 1,
-			curveSegments : benchResolution,
+			curveSegments : seatOptions.resolution,
 			bevelEnabled : false
 		};
 		var seatGeometry = new THREE.ExtrudeGeometry (seatShape, seatExtrudeOptions);
@@ -152,13 +153,14 @@ class Recliner extends THREE.Object3D {
 }
 
 class Lateral extends THREE.Object3D {
-	constructor ()
+	constructor (lateralResolution)
 	{
 		super();
 
 		// Opciones del lateral
 		var lateralOptions = {
-			long : 0.01
+			long : 0.01,
+			resolution : lateralResolution
 		};
 
 		var lateralShape = new THREE.Shape ();
@@ -192,10 +194,10 @@ class Lateral extends THREE.Object3D {
 		var lateralExtrudeOptions = {
 			depth : lateralOptions.long,
 			steps : 1,
-			curveSegments : benchResolution,
+			curveSegments : lateralOptions.resolution,
 			bevelThickness : 0.25,
 			bevelSize : 0.05,
-			bevelSegments: benchResolution
+			bevelSegments: lateralOptions.resolution
 		};
 		var lateralGeometry = new THREE.ExtrudeGeometry (lateralShape, lateralExtrudeOptions);
 		lateralGeometry.rotateY (Math.PI / 2.0);
