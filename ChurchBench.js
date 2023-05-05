@@ -51,6 +51,11 @@ class ChurchBench extends THREE.Object3D {
 
 		//bench.scale.set (0.5, 0.5, 0.5);
 
+		this.boundingBox = new THREE.Box3 ().setFromObject (bench);
+		this.boundingBoxHelper = new THREE.Box3Helper (this.boundingBox, 0xffff00);
+		this.add (this.boundingBoxHelper);
+		this.boundingBoxHelper.visible = true;
+
 		// Se añade al modelo
 		this.add (bench);
 	}
