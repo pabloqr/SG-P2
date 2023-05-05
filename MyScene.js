@@ -18,9 +18,6 @@ import { Fachade } from './Fachade.js';
  */
 
 class MyScene extends THREE.Scene {
-
-	
-
 	constructor (myCanvas)
 	{
 		super();
@@ -44,7 +41,7 @@ class MyScene extends THREE.Scene {
 		this.createCamera ();
 
 		// Array de colisiones estáticas
-		this.collisionArray = [];
+		this.collisionBoxArray = [];
 
 		// Creamos reloj
 		this.clock = new THREE.Clock();
@@ -59,21 +56,66 @@ class MyScene extends THREE.Scene {
 		// Por último creamos el modelo.
 		// El modelo puede incluir su parte de la interfaz gráfica de usuario. Le pasamos la referencia a 
 		// la gui y el texto bajo el que se agruparán los controles de la interfaz que añada el modelo.
+		
+
+		//Creacion de iglesia
 		var church = new Church ();
-		// var bench = new ChurchBench ();
+		church.bb0 = new THREE.Box3(new THREE.Vector3(-31,0,-30),new THREE.Vector3(-30,10,40));
+		church.bb1 = new THREE.Box3(new THREE.Vector3(30,0,-30),new THREE.Vector3(31,10,40));
+		church.bb2 = new THREE.Box3(new THREE.Vector3(-30,0,-40),new THREE.Vector3(30,10,-30));
+		church.bb3 = new THREE.Box3(new THREE.Vector3(-30,0,-30),new THREE.Vector3(30,2.75,-20.75));
+		church.bb4 = new THREE.Box3(new THREE.Vector3(-30,0,32.5),new THREE.Vector3(-8,10,35));
+		church.bb5 = new THREE.Box3(new THREE.Vector3(8,0,32.5),new THREE.Vector3(30,10,35));
+
+		this.add(new THREE.Box3Helper(church.bb0,0xffff00));
+		this.add(new THREE.Box3Helper(church.bb1,0xffff00));
+		this.add(new THREE.Box3Helper(church.bb2,0xffff00));
+		this.add(new THREE.Box3Helper(church.bb3,0xffff00));
+		this.add(new THREE.Box3Helper(church.bb4,0xffff00));
+		this.add(new THREE.Box3Helper(church.bb5,0xffff00));
+
+		this.collisionBoxArray.push(church.bb0);
+		this.collisionBoxArray.push(church.bb1);
+		this.collisionBoxArray.push(church.bb2);
+		this.collisionBoxArray.push(church.bb3);
+		this.collisionBoxArray.push(church.bb4);
+		this.collisionBoxArray.push(church.bb5);
+
+
 		var clock = new Clock ();
 		var fachade = new Fachade ();
 
 		clock.position.set(29,0,2);
 		
 
+		//Creacion de columnas
+		var columnSeparation = 21;
+		var columnSize = 1.5;
 		for(var i = 0; i < 5; i++)
 		{
 			var columna = new Column ();
 			columna.position.set(0,0,i*9-15);
+			var min0 = new THREE.Vector3(-columnSize+columnSeparation,0,-columnSize+i*9-15);
+			var max0 = new THREE.Vector3(columnSize+columnSeparation,2,columnSize+i*9-15);
+			var min1 = new THREE.Vector3(-columnSize-columnSeparation,0,-columnSize+i*9-15);
+			var max1 = new THREE.Vector3(columnSize-columnSeparation,2,columnSize+i*9-15);
+			columna.boundingBox0 = new THREE.Box3(min0,max0);
+			columna.boundingBox1 = new THREE.Box3(min1,max1);
+			
+			columna.boundingBoxHelper0 = new THREE.Box3Helper (columna.boundingBox0, 0xffff00);
+			columna.boundingBoxHelper1 = new THREE.Box3Helper (columna.boundingBox1, 0xffff00);
+			this.add(columna.boundingBoxHelper0);
+			this.add(columna.boundingBoxHelper1);
+
+			columna.boundingBoxHelper0.visible = true;
+			columna.boundingBoxHelper1.visible = true;
 			this.add (columna);
+			this.collisionBoxArray.push(columna.boundingBox0);
+			this.collisionBoxArray.push(columna.boundingBox1);
+
 		}
 
+		//Creacion de bancos
 		var benchScale = 0.2;
 		var benchSeparation = 10;
 		for(var i = 0; i < 10; i++)
@@ -81,18 +123,26 @@ class MyScene extends THREE.Scene {
 			for(var j = -1; j < 2;j+=2)
 			{
 				var bench0 = new ChurchBench (48, 8);
+
 				bench0.position.set(benchSeparation*j,0,i*4.5-15);
 				bench0.rotation.set(0,Math.PI,0);
 				bench0.scale.set(benchScale,benchScale,benchScale);
+				
+				bench0.boundingBox = new THREE.Box3 ().setFromObject (bench0);
+				bench0.boundingBoxHelper = new THREE.Box3Helper (bench0.boundingBox, 0xffff00);
+				this.add (bench0.boundingBoxHelper);
+				bench0.boundingBoxHelper.visible = true;
+
+
+
 				this.add (bench0);
 
-				this.collisionArray.push(bench0.boundixBox);
+				this.collisionBoxArray.push(bench0.boundingBox);
 			}
 
 		}
 
 		this.add (church);
-		// this.add (bench);
 		this.add (clock);
 		this.add (fachade);
 
@@ -132,12 +182,10 @@ class MyScene extends THREE.Scene {
 		this.camera = new THREE.PerspectiveCamera (45, window.innerWidth / window.innerHeight, 0.1, 1000);
 		// También se indica dónde se coloca
 		// Y hacia dónde mira
-		//this.look = new THREE.Vector3 (0,0,0);
-		//this.camera.lookAt(this.look);
 		this.cameraObj = new THREE.Object3D ();
 		this.cameraObj.position.set (0, 2, 0);
 		this.cameraObj.add (this.camera);
-		this.add (this.cameraObj);
+		
 
 		this.cameraHAngle = 0.0;
 		this.cameraVAngle = 0.0;
@@ -146,16 +194,17 @@ class MyScene extends THREE.Scene {
 			right: 0, left: 0, front: 0, back: 0
 		};
 
-		/*
-		// Para el control de cámara usamos una clase que ya tiene implementado los movimientos de órbita
-		this.cameraControl = new TrackballControls (this.camera, this.renderer.domElement);
-		// Se configuran las velocidades de los movimientos
-		this.cameraControl.rotateSpeed = 5;
-		this.cameraControl.zoomSpeed = 2;
-		this.cameraControl.panSpeed = 0.5;
-		// Debe orbitar con respecto al punto de mira de la cámara
-		this.cameraControl.target = this.look;
-		*/
+
+		//Creamos jugador
+		this.jugador = new THREE.Object3D ();
+		const min = new THREE.Vector3(-0.5, 0, -0.5);
+		const max = new THREE.Vector3(0.5, 2.5, 0.5);
+		this.jugador.add(this.cameraObj);
+
+		this.jugador.boundingBox = new THREE.Box3 (min,max);
+		this.jugador.boundingBoxHelper = new THREE.Box3Helper (this.jugador.boundingBox, 0xffff00);
+		this.add (this.jugador.boundingBoxHelper);
+		this.add (this.jugador);
 	}
 
 	createGround () {
@@ -213,7 +262,7 @@ class MyScene extends THREE.Scene {
 		// La luz ambiental solo tiene un color y una intensidad
 		// Se declara como   var   y va a ser una variable local a este método
 		//    se hace así puesto que no va a ser accedida desde otros métodos
-		var ambientLight = new THREE.AmbientLight(0xccddee, 0.35);
+		var ambientLight = new THREE.AmbientLight(0xccddee, 0.70);
 		// La añadimos a la escena
 		this.add (ambientLight);
 
@@ -357,8 +406,36 @@ class MyScene extends THREE.Scene {
 
 			var rot = this.cameraObj.rotation.y + Math.atan2 (xMove, yMove);
 
-			this.cameraObj.position.x += Math.sin (rot)*cameraMoveSpeed*this.deltaTime;
-			this.cameraObj.position.z += Math.cos (rot)*cameraMoveSpeed*this.deltaTime;
+			var lastPosition = {
+				x : this.jugador.position.x,
+				z : this.jugador.position.z
+			};
+
+			this.jugador.position.x += Math.sin (rot)*cameraMoveSpeed*this.deltaTime;
+			this.jugador.position.z += Math.cos (rot)*cameraMoveSpeed*this.deltaTime;
+
+			var min = new THREE.Vector3(-0.5+this.jugador.position.x, 0, -0.5+lastPosition.z);
+			var max = new THREE.Vector3(0.5+this.jugador.position.x, 2.5, 0.5+lastPosition.z);
+			this.jugador.boundingBox.min = min;
+			this.jugador.boundingBox.max = max;
+
+			this.collisionBoxArray.forEach(collider => {
+				if(this.jugador.boundingBox.intersectsBox(collider))
+				{
+					this.jugador.position.x = lastPosition.x;
+				}
+			})
+
+			min = new THREE.Vector3(-0.5+this.jugador.position.x, 0, -0.5+this.jugador.position.z);
+			max = new THREE.Vector3(0.5+this.jugador.position.x, 2.5, 0.5+this.jugador.position.z);
+			this.jugador.boundingBox.min = min;
+			this.jugador.boundingBox.max = max;
+			this.collisionBoxArray.forEach(collider => {
+				if(this.jugador.boundingBox.intersectsBox(collider))
+				{
+					this.jugador.position.z = lastPosition.z;
+				}
+			})
 		}
 	}
 
