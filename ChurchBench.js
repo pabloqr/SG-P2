@@ -7,7 +7,7 @@ class ChurchBench extends THREE.Object3D {
 		super();
 
 		// Material del banco
-		var benchMaterial = new THREE.MeshPhongMaterial ({ color: 0x755331 });
+		var benchMaterial = new THREE.MeshPhongMaterial ({ color : 0x755331 });
 
 		// Geometrías necesarias para construir el banco
 		// Asiento
@@ -63,8 +63,8 @@ class Seat extends THREE.Object3D {
 
 		// Opciones del banco
 		var seatOptions = {
-			long : seatLong,
-			resolution : seatResolution
+			l : seatLong,
+			r : seatResolution
 		};
 
 		// Construcción del shape del banco
@@ -95,14 +95,14 @@ class Seat extends THREE.Object3D {
 
 		// Construcción de la extrusión
 		var seatExtrudeOptions = {
-			depth : seatOptions.long,
+			depth : seatOptions.l,
 			steps : 1,
-			curveSegments : seatOptions.resolution,
+			curveSegments : seatOptions.r,
 			bevelEnabled : false
 		};
 		var seatGeometry = new THREE.ExtrudeGeometry (seatShape, seatExtrudeOptions);
 		seatGeometry.rotateY (Math.PI / 2.0);
-		seatGeometry.translate (-seatOptions.long/2.0, 0.0, 0.0);
+		seatGeometry.translate (-seatOptions.l/2.0, 0.0, 0.0);
 
 		//this.add (seatLine);
 
@@ -117,8 +117,8 @@ class Recliner extends THREE.Object3D {
 
 		// Opciones del reclinatorio
 		var reclinerOptions = {
-			long : reclinerLong - 0.5,
-			resolution : reclinerResolution
+			l : reclinerLong - 0.5,
+			r : reclinerResolution
 		};
 
 		var reclinerShape = new THREE.Shape ();
@@ -135,16 +135,16 @@ class Recliner extends THREE.Object3D {
 
 		// Construcción de la extrusión
 		var reclinerExtrudeOptions = {
-			depth : reclinerOptions.long,
+			depth : reclinerOptions.l,
 			steps : 1,
-			curveSegments : reclinerOptions.resolution,
+			curveSegments : reclinerOptions.r,
 			bevelThickness : 0.5,
 			bevelSize : 0.05,
-			bevelSegments: reclinerOptions.resolution
+			bevelSegments: reclinerOptions.r
 		};
 		var reclinerGeometry = new THREE.ExtrudeGeometry (reclinerShape, reclinerExtrudeOptions);
 		reclinerGeometry.rotateY (Math.PI / 2.0);
-		reclinerGeometry.translate (-reclinerOptions.long/2.0, -0.075, 0.0);
+		reclinerGeometry.translate (-reclinerOptions.l/2.0, -0.075, 0.0);
 
 		//this.add (reclinerLine);
 
@@ -159,8 +159,8 @@ class Lateral extends THREE.Object3D {
 
 		// Opciones del lateral
 		var lateralOptions = {
-			long : 0.01,
-			resolution : lateralResolution
+			l : 0.01,
+			r : lateralResolution
 		};
 
 		var lateralShape = new THREE.Shape ();
@@ -192,16 +192,16 @@ class Lateral extends THREE.Object3D {
 
 		// Construcción de la extrusión
 		var lateralExtrudeOptions = {
-			depth : lateralOptions.long,
+			depth : lateralOptions.l,
 			steps : 1,
-			curveSegments : lateralOptions.resolution,
+			curveSegments : lateralOptions.r,
 			bevelThickness : 0.25,
 			bevelSize : 0.05,
-			bevelSegments: lateralOptions.resolution
+			bevelSegments: lateralOptions.r
 		};
 		var lateralGeometry = new THREE.ExtrudeGeometry (lateralShape, lateralExtrudeOptions);
 		lateralGeometry.rotateY (Math.PI / 2.0);
-		lateralGeometry.translate (-lateralOptions.long/2.0, 0.0, 0.0);
+		lateralGeometry.translate (-lateralOptions.l/2.0, 0.0, 0.0);
 
 		//this.add (lateralLine);
 
