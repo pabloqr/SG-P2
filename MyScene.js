@@ -18,9 +18,13 @@ import { Fachade } from './Fachade.js';
  */
 
 class MyScene extends THREE.Scene {
+
+	
+
 	constructor (myCanvas)
 	{
 		super();
+
 
 		// Lo primero, crear el visualizador, pasándole el lienzo sobre el que realizar los renderizados.
 		this.renderer = this.createRenderer(myCanvas);
@@ -38,6 +42,9 @@ class MyScene extends THREE.Scene {
 
 		// Tendremos una cámara con un control de movimiento con el ratón
 		this.createCamera ();
+
+		// Array de colisiones estáticas
+		this.collisionArray = [];
 
 		// Creamos reloj
 		this.clock = new THREE.Clock();
@@ -68,7 +75,6 @@ class MyScene extends THREE.Scene {
 		}
 
 		var benchScale = 0.2;
-		var benchLength = 4;
 		var benchSeparation = 10;
 		for(var i = 0; i < 10; i++)
 		{
@@ -79,6 +85,8 @@ class MyScene extends THREE.Scene {
 				bench0.rotation.set(0,Math.PI,0);
 				bench0.scale.set(benchScale,benchScale,benchScale);
 				this.add (bench0);
+
+				this.collisionArray.push(bench0.boundixBox);
 			}
 
 		}
