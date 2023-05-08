@@ -10,13 +10,13 @@ class ChurchBench extends THREE.Object3D {
 		// var benchMaterial = new THREE.MeshPhongMaterial ({ color : 0x755331 });
 
 		var loader = new THREE.TextureLoader();
-		var textura = loader.load("imgs/Wood_025_basecolor.jpg");
+		var texture = loader.load ("imgs/Wood_025_basecolor.jpg");
 
-		textura.wrapT = THREE.RepeatWrapping;
-		textura.wrapS = THREE.RepeatWrapping;
-		textura.repeat.set(0.2,0.2);
+		texture.wrapT = THREE.RepeatWrapping;
+		texture.wrapS = THREE.RepeatWrapping;
+		texture.repeat.set (0.2,0.2);
 
-		var benchMaterial = new THREE.MeshPhongMaterial({map:textura,color:0xffffff});
+		var benchMaterial = new THREE.MeshPhongMaterial({ map : texture, color : 0xffffff });
 
 		// Geometrías necesarias para construir el banco
 		// Asiento
@@ -57,8 +57,6 @@ class ChurchBench extends THREE.Object3D {
 		bench.add (lateralMeshRight);
 		bench.add (connectorMeshLeft);
 		bench.add (connectorMeshRight);
-
-		//bench.scale.set (0.5, 0.5, 0.5);
 
 		// Se añade al modelo
 		this.add (bench);

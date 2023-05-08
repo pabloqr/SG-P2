@@ -7,10 +7,11 @@ import { Object3D } from './libs/three.module.js';
 
 // Clases de mi proyecto
 import { Church } from './Church.js';
-import { ChurchBench } from './ChurchBench.js';
-import { Clock } from './Clock.js';
 import { Column } from './Column.js';
 import { Fachade } from './Fachade.js';
+import { Clock } from './Clock.js';
+import { ChurchBench } from './ChurchBench.js';
+import { Chandelier } from './Chandelier.js';
 
 /// La clase fachada del modelo
 /**
@@ -57,8 +58,7 @@ class MyScene extends THREE.Scene {
 		// El modelo puede incluir su parte de la interfaz gráfica de usuario. Le pasamos la referencia a 
 		// la gui y el texto bajo el que se agruparán los controles de la interfaz que añada el modelo.
 		
-
-		//Creacion de iglesia
+		// Creación de iglesia
 		var church = new Church ();
 		church.bb0 = new THREE.Box3(new THREE.Vector3(-31,0,-30),new THREE.Vector3(-30,10,40));
 		church.bb1 = new THREE.Box3(new THREE.Vector3(30,0,-30),new THREE.Vector3(31,10,40));
@@ -81,14 +81,10 @@ class MyScene extends THREE.Scene {
 		this.collisionBoxArray.push(church.bb4);
 		this.collisionBoxArray.push(church.bb5);
 
-
-		var clock = new Clock ();
+		// Creación de la fachada
 		var fachade = new Fachade ();
 
-		clock.position.set(29,0,2);
-		
-
-		//Creacion de columnas
+		// Creación de columnas
 		var columnSeparation = 21;
 		var columnSize = 1.5;
 		for(var i = 0; i < 5; i++)
@@ -115,7 +111,11 @@ class MyScene extends THREE.Scene {
 
 		}
 
-		//Creacion de bancos
+		// Creación del reloj (modelo jerárquico)
+		var clock = new Clock ();
+		clock.position.set(29,0,2);
+		
+		// Creación de bancos
 		var benchScale = 0.2;
 		var benchSeparation = 10;
 		for(var i = 0; i < 10; i++)
@@ -133,18 +133,22 @@ class MyScene extends THREE.Scene {
 				this.add (bench0.boundingBoxHelper);
 				bench0.boundingBoxHelper.visible = true;
 
-
-
 				this.add (bench0);
 
 				this.collisionBoxArray.push(bench0.boundingBox);
 			}
-
 		}
 
+		// Creación del lampadario
+		var chandelier = new Chandelier (8, 4.0*Math.PI/9.0);
+		chandelier.position.set (-29.5, 0.0, 10.0);
+		chandelier.rotation.set (0.0, Math.PI/2.0, 0.0);
+		chandelier.scale.set (0.15, 0.15, 0.15);
+
 		this.add (church);
-		this.add (clock);
 		this.add (fachade);
+		this.add (clock);
+		this.add (chandelier);
 
 		/*
 		var boundingBox = new THREE.Box3 ().setFromObject (church);
