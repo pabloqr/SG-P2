@@ -123,7 +123,6 @@ class MyScene extends THREE.Scene {
 			for(var j = -1; j < 2;j+=2)
 			{
 				var bench0 = new ChurchBench (48, 8);
-
 				bench0.position.set(benchSeparation*j,0,i*4.5-15);
 				bench0.rotation.set(0,Math.PI,0);
 				bench0.scale.set(benchScale,benchScale,benchScale);
@@ -144,6 +143,13 @@ class MyScene extends THREE.Scene {
 		chandelier.position.set (-29.5, 0.0, 10.0);
 		chandelier.rotation.set (0.0, Math.PI/2.0, 0.0);
 		chandelier.scale.set (0.15, 0.15, 0.15);
+
+		chandelier.boundingBox = new THREE.Box3 ().setFromObject (chandelier);
+		chandelier.boundingBoxHelper = new THREE.Box3Helper (chandelier.boundingBox, 0xffff00);
+		this.add (chandelier.boundingBoxHelper);
+		chandelier.boundingBoxHelper.visible = true;
+
+		this.collisionBoxArray.push (chandelier.boundingBox);
 
 		this.add (church);
 		this.add (fachade);
