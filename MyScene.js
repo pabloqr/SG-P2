@@ -10,6 +10,8 @@ import { Church } from './Church.js';
 import { Column } from './Column.js';
 import { Fachade } from './Fachade.js';
 import { Clock } from './Clock.js';
+import { ClockHand } from './ClockHand.js';
+import { ClockPendulus } from './ClockPendulus.js';
 import { ChurchBench } from './ChurchBench.js';
 import { Chandelier } from './Chandelier.js';
 
@@ -18,11 +20,23 @@ import { Chandelier } from './Chandelier.js';
  * Usaremos una clase derivada de la clase Scene de Three.js para llevar el control de la escena y de todo lo que ocurre en ella.
  */
 
+function angleFromVector(v0,v1)
+{
+	return Math.acos( (v0.x * v1.x + v0.y * v1.y) / (Math.sqrt(Math.pow(v0.x,2)+Math.pow(v0.x,2)) * Math.sqrt(Math.pow(v1.x,2)+Math.pow(v1.y,2))) );
+}
+
 class MyScene extends THREE.Scene {
+	
+
 	constructor (myCanvas)
 	{
 		super();
 
+		MyScene.NO_ACTION = 0 ;
+		MyScene.PICKING_MINUTES = 1;
+		MyScene.PICKING_HOURS = 2;
+
+		this.sceneState = MyScene.NO_ACTION;
 
 		// Lo primero, crear el visualizador, pasándole el lienzo sobre el que realizar los renderizados.
 		this.renderer = this.createRenderer(myCanvas);
@@ -31,6 +45,8 @@ class MyScene extends THREE.Scene {
 		this.gui = this.createGUI ();
 
 		this.initStats();
+
+		this.raycaster = new THREE.Raycaster();
 
 		// Construimos los distinos elementos que tendremos en la escena
 
@@ -44,11 +60,11 @@ class MyScene extends THREE.Scene {
 		// Array de colisiones estáticas
 		this.collisionBoxArray = [];
 
-		// Creamos reloj
-		this.clock = new THREE.Clock();
+		// Array de objetos pickables
+		this.pickableObjects = [];
 
-		// Un suelo 
-		//this.createGround ();
+		// Creamos reloj de actualizaciones
+		this.clock = new THREE.Clock();
 
 		// Y unos ejes. Imprescindibles para orientarnos sobre dónde están las cosas
 		this.axis = new THREE.AxesHelper (5);
@@ -112,9 +128,30 @@ class MyScene extends THREE.Scene {
 		}
 
 		// Creación del reloj (modelo jerárquico)
-		var clock = new Clock ();
-		clock.position.set(29,0,2);
-		
+		this.clockModel = new Clock ();
+		this.clockModel.position.set(29,0,2);
+		var clockHandMinute = new ClockHand("clockHandMinute");
+		var clockHandHour = new ClockHand("clockHandHour",0.05,0.2);
+		var clockPendulus = new ClockPendulus();
+		this.clockHandMinutesAngle = Math.PI/2;
+		this.clockHandHourAngle = this.clockHandMinutesAngle/12;
+		clockHandHour.position.set(-0.9,4.5);
+		clockHandMinute.position.set(-0.92,4.5);
+		clockHandHour.rotation.set(-this.clockHandMinutesAngle/12+Math.PI/2,Math.PI/2,0);
+		clockHandMinute.rotation.set(-this.clockHandMinutesAngle+Math.PI/2,Math.PI/2,0);
+		this.clockHandHour = clockHandHour;
+		this.clockHandMinute = clockHandMinute;
+
+		this.add(clockPendulus);
+
+		// this.clockHandMinute.boundingBox = new THREE.Box3 ().setFromObject (this.clockHandMinute);
+		// this.clockHandMinute.boundingBoxHelper = new THREE.Box3Helper (this.clockHandMinute.boundingBox, 0x0000ff);
+		// this.add (this.clockHandMinute.boundingBoxHelper);
+		// this.clockHandMinute.boundingBoxHelper.visible = true;
+
+		this.pickableObjects.push(this.clockHandMinute);//He intentado usar bounding box pero da error el raycaster !!!!
+		this.pickableObjects.push(this.clockHandHour);
+
 		// Creación de bancos
 		var benchScale = 0.2;
 		var benchSeparation = 10;
@@ -153,7 +190,9 @@ class MyScene extends THREE.Scene {
 
 		this.add (church);
 		this.add (fachade);
-		this.add (clock);
+		this.add (this.clockModel);
+		this.clockModel.add (clockHandHour);
+		this.clockModel.add (clockHandMinute);
 		this.add (chandelier);
 
 		/*
@@ -343,38 +382,84 @@ class MyScene extends THREE.Scene {
 		}
 	}
 
+	onDoubleClick(event)
+	{
+		if(event.button == 0)
+		{
+
+			this.raycaster.setFromCamera(this.mouse,this.camera);
+
+			var pickedObjects = this.raycaster.intersectObjects(this.pickableObjects, true);
+
+			if(pickedObjects.length>0)
+			{
+				var selectedObject = pickedObjects[0].object.userData;
+				var selectedPoint = pickedObjects[0].point;
+				console.log("pick! "+selectedObject.name);
+				console.log(pickedObjects[0]);
+				switch(selectedObject.name)
+				{
+					case "clockHandHour":
+						this.sceneState = MyScene.PICKING_HOURS;
+						break;
+					case "clockHandMinute":
+						this.sceneState = MyScene.PICKING_MINUTES;
+						break;
+				}
+			}
+			else
+			{
+				this.sceneState = MyScene.NO_ACTION;
+				this.cameraRotation = false;
+			}
+		}
+		
+	}
+
 	onMouseUp (event)
 	{
-		if (event.which == 1) {
+		if(this.sceneState == MyScene.NO_ACTION)
+		{
+			if (event.which == 1) {
 
-			this.cameraRotation = false;
+				this.cameraRotation = false;
+			}
 		}
 	}
 
 	onMouseMove (event)
 	{
-		if (this.cameraRotation) {
+		this.mouse = {x:0,y:0};
 
-			this.mouseDelta = {
-			x: event.clientX - this.mousePosition.x,
-			y: event.clientY - this.mousePosition.y
-			};
+		this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+		this.mouse.y = 1 - 2 * (event.clientY / window.innerHeight);
 
-			this.mousePosition.x = event.clientX;
-			this.mousePosition.y = event.clientY;
 
-			var cameraDelta = {
-			h: this.mouseDelta.x / window.innerWidth,
-			v: this.mouseDelta.y / window.innerHeight
-			};
+		if(this.sceneState == MyScene.NO_ACTION)
+		{
+			if (this.cameraRotation) {
 
-			var cameraRotationSpeed = 3;
+				this.mouseDelta = {
+				x: event.clientX - this.mousePosition.x,
+				y: event.clientY - this.mousePosition.y
+				};
 
-			this.cameraHAngle += cameraDelta.h*cameraRotationSpeed;
-			this.cameraVAngle += cameraDelta.v*(cameraRotationSpeed*(window.innerHeight/window.innerWidth));
+				this.mousePosition.x = event.clientX;
+				this.mousePosition.y = event.clientY;
 
-			this.camera.rotation.x = -this.cameraVAngle;
-			this.cameraObj.rotation.y = -this.cameraHAngle;
+				var cameraDelta = {
+				h: this.mouseDelta.x / window.innerWidth,
+				v: this.mouseDelta.y / window.innerHeight
+				};
+
+				var cameraRotationSpeed = 3;
+
+				this.cameraHAngle += cameraDelta.h*cameraRotationSpeed;
+				this.cameraVAngle += cameraDelta.v*(cameraRotationSpeed*(window.innerHeight/window.innerWidth));
+
+				this.camera.rotation.x = -this.cameraVAngle;
+				this.cameraObj.rotation.y = -this.cameraHAngle;
+			}
 		}
 	}
 
@@ -382,25 +467,33 @@ class MyScene extends THREE.Scene {
 	{
 		this.key = event.which || event.key;
 
-		switch (String.fromCharCode (this.key).toUpperCase())
+		if(this.sceneState == MyScene.NO_ACTION)
 		{
-			case 'W': this.cameraMovement.front = 1; break;
-			case 'A': this.cameraMovement.left = 1; break;
-			case 'S': this.cameraMovement.back = 1; break;
-			case 'D': this.cameraMovement.right = 1; break;
+			switch (String.fromCharCode (this.key).toUpperCase())
+			{
+				case 'W': this.cameraMovement.front = 1; break;
+				case 'A': this.cameraMovement.left = 1; break;
+				case 'S': this.cameraMovement.back = 1; break;
+				case 'D': this.cameraMovement.right = 1; break;
+			}
 		}
 	}
+
+	
 
 	keyboardKeyUp (event)
 	{
 		this.key = event.which || event.key;
 
-		switch (String.fromCharCode (this.key).toUpperCase())
+		if(this.sceneState == MyScene.NO_ACTION)
 		{
-			case 'W': this.cameraMovement.front = 0; break;
-			case 'A': this.cameraMovement.left = 0; break;
-			case 'S': this.cameraMovement.back = 0; break;
-			case 'D': this.cameraMovement.right = 0; break;
+			switch (String.fromCharCode (this.key).toUpperCase())
+			{
+				case 'W': this.cameraMovement.front = 0; break;
+				case 'A': this.cameraMovement.left = 0; break;
+				case 'S': this.cameraMovement.back = 0; break;
+				case 'D': this.cameraMovement.right = 0; break;
+			}
 		}
 	}
 
@@ -449,6 +542,95 @@ class MyScene extends THREE.Scene {
 		}
 	}
 
+	
+	updateClockModel()
+	{
+		var handDelta = Math.PI*2/60*this.deltaTime;//una vuelta en 1 minuto
+
+		if(this.sceneState == MyScene.PICKING_HOURS || this.sceneState == MyScene.PICKING_MINUTES )
+		{
+			// var center = this.clockHandHour.position;
+
+			var center = new THREE.Vector3();
+
+			this.clockHandHour.getWorldPosition ( center );
+
+			this.raycaster.setFromCamera(this.mouse,this.camera);
+	
+			var objects = [];
+			objects.push(this.clockModel); // No me deja hacerlo de un tirón !!!!
+	
+			var pickedObjects = this.raycaster.intersectObjects(objects, true);
+	
+			var angle;
+	
+			if(pickedObjects.length>0)
+			{
+				var selectedPoint = pickedObjects[0].point;
+
+				var v = 
+				{
+					x:selectedPoint.z-center.z,
+					y:selectedPoint.y-center.y
+				}
+
+				angle = Math.sign(v.y) * Math.acos(v.x/((Math.sqrt(v.x*v.x+v.y*v.y))));
+			}
+
+			if( !isNaN(angle))
+			{
+				if(this.sceneState == MyScene.PICKING_HOURS )
+				{
+					var delta = angle - ((this.clockHandHourAngle) % (Math.PI*2));
+	
+					if((delta)>Math.PI) 
+					{
+						delta-=Math.PI*2;
+					}
+					else if((delta)<-Math.PI) 
+					{
+						delta+=Math.PI*2;
+					}
+	
+					this.clockHandMinutesAngle += delta*12;
+					this.clockHandHourAngle += delta;
+					this.clockHandMinute.rotation.x = -this.clockHandMinutesAngle+Math.PI/2;
+					this.clockHandHour.rotation.x = -this.clockHandHourAngle+Math.PI/2;
+				}
+				else
+				{
+					var delta = angle - (this.clockHandMinutesAngle % (Math.PI*2));
+	
+					if(delta>Math.PI) 
+					{
+						delta-=Math.PI*2;
+					}
+					else if((delta)<-Math.PI) 
+					{
+						delta+=Math.PI*2;
+					}
+	
+					this.clockHandMinutesAngle += delta;
+					this.clockHandHourAngle += delta/12;
+					this.clockHandMinute.rotation.x = -this.clockHandMinutesAngle+Math.PI/2;
+					this.clockHandHour.rotation.x = -this.clockHandHourAngle+Math.PI/2;
+				}
+			}
+
+
+		}
+		else
+		{
+			this.clockHandHour.rotateZ(handDelta/(60*12));
+			this.clockHandMinute.rotateZ(handDelta/60);
+		}
+
+
+
+
+		// this.clockHandMinute.boundingBox.rotation = this.clockHandMinute.rotation;
+	}
+
 	update () {
 
 		if (this.stats) this.stats.update();
@@ -470,6 +652,8 @@ class MyScene extends THREE.Scene {
 		// Literalmente le decimos al navegador: "La próxima vez que haya que refrescar la pantalla, llama al método que te indico".
 		// Si no existiera esta línea,  update()  se ejecutaría solo la primera vez.
 		requestAnimationFrame(() => this.update())
+
+		this.updateClockModel();
 	}
 }
 
@@ -488,6 +672,8 @@ $(function () {
 
 	window.addEventListener ("keydown", (event) => scene.keyboardKeyDown (event));
 	window.addEventListener ("keyup", (event) => scene.keyboardKeyUp (event));
+
+	window.addEventListener("dblclick", (event) => scene.onDoubleClick(event));
 
 	// Que no se nos olvide, la primera visualización.
 	scene.update();
