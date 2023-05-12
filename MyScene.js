@@ -26,12 +26,11 @@ function angleFromVector(v0,v1)
 }
 
 class MyScene extends THREE.Scene {
-	
-
 	constructor (myCanvas)
 	{
 		super();
 
+		// Estado de la escena
 		MyScene.NO_ACTION = 0 ;
 		MyScene.PICKING_MINUTES = 1;
 		MyScene.PICKING_HOURS = 2;
@@ -479,8 +478,6 @@ class MyScene extends THREE.Scene {
 		}
 	}
 
-	
-
 	keyboardKeyUp (event)
 	{
 		this.key = event.which || event.key;
@@ -542,7 +539,6 @@ class MyScene extends THREE.Scene {
 		}
 	}
 
-	
 	updateClockModel()
 	{
 		var handDelta = Math.PI*2/60*this.deltaTime;//una vuelta en 1 minuto

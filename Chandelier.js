@@ -1,4 +1,5 @@
 import * as THREE from './libs/three.module.js'
+import { CSG } from './libs/CSG-v2.js'
 
 class Chandelier extends THREE.Object3D {
 	constructor (chandelierRadius = 8, chandelierRotation = Math.PI/3.0)
@@ -9,13 +10,26 @@ class Chandelier extends THREE.Object3D {
 		//var chandelierMaterial = new THREE.MeshPhongMaterial ({ color : 0x6b1e00 });
 
 		var loader = new THREE.TextureLoader ();
-		var texture = loader.load ("imgs/Wood_024_basecolor.jpg");
+		var chandelierTexture = loader.load ("imgs/Wood_024_basecolor.jpg");
+		var moenyBoxTexture = loader.load ("imgs/Wood_024_basecolor.jpg")
 
-		texture.wrapT = THREE.RepeatWrapping;
-		texture.wrapS = THREE.RepeatWrapping;
-		texture.repeat.set (8.0, 8.0);
+		chandelierTexture.wrapT = THREE.RepeatWrapping;
+		chandelierTexture.wrapS = THREE.RepeatWrapping;
+		chandelierTexture.repeat.set (15.0, 15.0);
 
-		var chandelierMaterial = new THREE.MeshPhongMaterial ({ map : texture, color : 0xffffff });
+		var chandelierMaterial = new THREE.MeshPhongMaterial ({ map : chandelierTexture, color : 0xffffff });
+
+		moenyBoxTexture.wrapT = THREE.RepeatWrapping;
+		moenyBoxTexture.wrapS = THREE.RepeatWrapping;
+		moenyBoxTexture.repeat.set (0.75, 0.75);
+
+		var moneyBoxMaterial = new THREE.MeshPhongMaterial ({ map : moenyBoxTexture, color : 0xffffff })
+
+		// Caja para las monedas
+		var moneyBoxGeometry = new MoneyBox (chandelierRadius/8.0);
+		moneyBoxGeometry.translate (0.0, chandelierRadius+chandelierRadius/20.0, chandelierRadius/3.0-chandelierRadius/14.0);
+
+		var moneyBoxMesh = new THREE.Mesh (moneyBoxGeometry, moneyBoxMaterial);
 
 		// Geometrías para construir el lampadario
 		// Base para las velas
@@ -44,6 +58,7 @@ class Chandelier extends THREE.Object3D {
 		// Objeto que almacena el lampadario
 		var chandelier = new THREE.Object3D ();
 		chandelier.add (holderMesh);
+		chandelier.add (moneyBoxMesh);
 		chandelier.add (lateralMeshLeft);
 		chandelier.add (lateralMeshRight);
 		chandelier.add (baseMesh);
@@ -107,6 +122,40 @@ class TopHolder extends THREE.Object3D {
 		//this.add (chandelierLine);
 
 		return chandelierGeom;
+	}
+}
+
+class MoneyBox extends THREE.Object3D {
+	constructor(boxWidth)
+	{
+		super();
+
+		// Opciones de la caja
+		var boxOptions = {
+			w : boxWidth,
+			h : 2.0*boxWidth/3.0
+		};
+
+		// Material para la caja
+		var boxMaterial = new THREE.MeshNormalMaterial ();
+
+		var bigBox = new THREE.BoxGeometry (boxOptions.w, boxOptions.h, boxOptions.h, 1, 1, 1);
+		var smallBox = new THREE.BoxGeometry (boxOptions.w-boxOptions.w/10.0, boxOptions.h, boxOptions.h-boxOptions.w/10.0, 1, 1, 1);
+		smallBox.translate (0.0, boxOptions.h-boxOptions.h/10.0, 0.0);
+		var verySmallBox = new THREE.BoxGeometry (boxOptions.w-boxOptions.w/1.25, boxOptions.h, boxOptions.h-boxOptions.w/1.6, 1, 1, 1)
+		verySmallBox.translate (0.0, boxOptions.h/10.0, 0.0);
+
+		var bigBoxMesh = new THREE.Mesh (bigBox, boxMaterial);
+		var smallBoxMesh = new THREE.Mesh (smallBox, boxMaterial);
+		var verySmallBoxMesh = new THREE.Mesh (verySmallBox, boxMaterial);
+
+		var CSGBox = new CSG ();
+		CSGBox.subtract ([ bigBoxMesh, smallBoxMesh ]);
+		CSGBox.subtract ([ verySmallBoxMesh ])
+
+		var moneyBoxGeometry = CSGBox.toGeometry();
+
+		return moneyBoxGeometry;
 	}
 }
 
@@ -179,32 +228,11 @@ class Base extends THREE.Object3D {
 		baseShape.bezierCurveTo (baseOptions.l+0.25, baseOptions.h/2.0, baseOptions.l+0.25, (baseOptions.h/2.0)+0.1, baseOptions.l+0.15, (baseOptions.h/2.0)+0.1);
 		baseShape.lineTo (baseOptions.l+0.15, baseOptions.h);
 		baseShape.lineTo (0.001, baseOptions.h);
-		//baseShape.lineTo (-baseOptions.l-0.15, baseOptions.h);
-		//baseShape.lineTo (-baseOptions.l-0.15, (baseOptions.h/2.0)+0.1);
-		//baseShape.bezierCurveTo (-baseOptions.l-0.25, (baseOptions.h/2.0)+0.1, -baseOptions.l-0.25, baseOptions.h/2.0, -baseOptions.l-0.15, baseOptions.h/2.0);
-		//baseShape.lineTo (-baseOptions.l, baseOptions.h/2.0);
-		//baseShape.lineTo (-baseOptions.l, 0.5);
-		//baseShape.lineTo (-baseOptions.l-0.5, 0.5);
-		//baseShape.lineTo (-baseOptions.l-0.5, 0.0);
 
 		// Para ver el contorno del shape
 		var baseLineGeom = new THREE.BufferGeometry ();
 		baseLineGeom.setFromPoints (baseShape.extractPoints (6).shape);
 		var baseLine = new THREE.Line (baseLineGeom, new THREE.MeshPhongMaterial ({ color : 0x000000 }));
-
-		// Construcción de la extrusión
-		/*
-		var baseExtrudeOptions = {
-			depth : 2.0*baseOptions.l,
-			steps : 1,
-			curveSegments : baseOptions.r,
-			bevelThickness : 0.05,
-			bevelSize : 0.05,
-			bevelSegments: baseOptions.r
-		};
-		var baseGeometry = new THREE.ExtrudeGeometry (baseShape, baseExtrudeOptions);
-		baseGeometry.translate (0.0, 0.0, -baseOptions.l);
-		*/
 
 		// Construcción de la revolución
 		var baseGeometry = new THREE.LatheGeometry (baseShape.extractPoints (6).shape, baseOptions.r, 0.0, 2.0*Math.PI);
