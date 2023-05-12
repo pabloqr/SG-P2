@@ -21,6 +21,11 @@ class Church extends THREE.Object3D
 					(object) => {
 						// object.material.repeat.set(10,10);
 						this.add (object);
+						object.traverseVisible( function( node ) { if ( node instanceof THREE.Mesh ) 
+							{ 
+								node.castShadow = true; 
+								node.receiveShadow = true;
+							}});
 					},
 					null,
 					null

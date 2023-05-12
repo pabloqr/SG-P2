@@ -18,7 +18,12 @@ class Clock extends THREE.Object3D
 				objectLoader.load (
 					'models/clock.obj',
 					(object) => {
-						this.add (object);
+						this.add (object);						
+						object.traverseVisible( function( node ) { if ( node instanceof THREE.Mesh ) 
+							{ 
+								node.castShadow = true; 
+								node.receiveShadow = true;
+							}});
 					},
 					null,
 					null

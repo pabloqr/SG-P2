@@ -19,6 +19,11 @@ class Column extends THREE.Object3D
 					'models/columna.obj',
 					(object) => {
 						this.add (object);
+						object.traverseVisible( function( node ) { if ( node instanceof THREE.Mesh ) 
+							{ 
+								node.castShadow = true; 
+								node.receiveShadow = true;
+							}});
 					},
 					null,
 					null

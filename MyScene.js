@@ -16,11 +16,26 @@ import { ChurchBench } from './ChurchBench.js';
 import { Chandelier } from './Chandelier.js';
 
 /// La clase fachada del modelo
-/**
+/**dw
  * Usaremos una clase derivada de la clase Scene de Three.js para llevar el control de la escena y de todo lo que ocurre en ella.
  */
+var nShadows = 0;
+function genShadows(obj)
+{
+	obj.receiveShadow = true;
+	obj.traverseVisible((node)=>{
+		if ( node instanceof THREE.Mesh ) 
+		{ 
+			node.castShadow = true; 
+			node.receiveShadow = true;
+			console.log(node);
+			nShadows++;
+		} 
+	});
+	
+}
 
-function angleFromVector(v0,v1)
+function angleFromVector(v0,v1)//no se usa(entre 0 y 180)
 {
 	return Math.acos( (v0.x * v1.x + v0.y * v1.y) / (Math.sqrt(Math.pow(v0.x,2)+Math.pow(v0.x,2)) * Math.sqrt(Math.pow(v1.x,2)+Math.pow(v1.y,2))) );
 }
@@ -39,6 +54,9 @@ class MyScene extends THREE.Scene {
 
 		// Lo primero, crear el visualizador, pasándole el lienzo sobre el que realizar los renderizados.
 		this.renderer = this.createRenderer(myCanvas);
+
+		this.renderer.shadowMap.enabled = true;
+		this.renderer.shadowMap.type = THREE.PCFShadowMap;
 
 		// Se añade a la gui los controles para manipular los elementos de esta clase
 		this.gui = this.createGUI ();
@@ -96,8 +114,12 @@ class MyScene extends THREE.Scene {
 		this.collisionBoxArray.push(church.bb4);
 		this.collisionBoxArray.push(church.bb5);
 
+		// genShadows(church);
+
 		// Creación de la fachada
 		var fachade = new Fachade ();
+
+		// genShadows(fachade);
 
 		// Creación de columnas
 		var columnSeparation = 21;
@@ -124,6 +146,7 @@ class MyScene extends THREE.Scene {
 			this.collisionBoxArray.push(columna.boundingBox0);
 			this.collisionBoxArray.push(columna.boundingBox1);
 
+			// genShadows(columna);
 		}
 
 		// Creación del reloj (modelo jerárquico)
@@ -140,6 +163,7 @@ class MyScene extends THREE.Scene {
 		clockHandMinute.rotation.set(-this.clockHandMinutesAngle+Math.PI/2,Math.PI/2,0);
 		this.clockHandHour = clockHandHour;
 		this.clockHandMinute = clockHandMinute;
+		genShadows(this.clockModel);
 
 		this.add(clockPendulus);
 
@@ -158,19 +182,21 @@ class MyScene extends THREE.Scene {
 		{
 			for(var j = -1; j < 2;j+=2)
 			{
-				var bench0 = new ChurchBench (48, 8);
-				bench0.position.set(benchSeparation*j,0,i*4.5-15);
-				bench0.rotation.set(0,Math.PI,0);
-				bench0.scale.set(benchScale,benchScale,benchScale);
+				var bench = new ChurchBench (48, 8);
+				bench.position.set(benchSeparation*j,0,i*4.5-15);
+				bench.rotation.set(0,Math.PI,0);
+				bench.scale.set(benchScale,benchScale,benchScale);
 				
-				bench0.boundingBox = new THREE.Box3 ().setFromObject (bench0);
-				bench0.boundingBoxHelper = new THREE.Box3Helper (bench0.boundingBox, 0xffff00);
-				this.add (bench0.boundingBoxHelper);
-				bench0.boundingBoxHelper.visible = true;
+				bench.boundingBox = new THREE.Box3 ().setFromObject (bench);
+				bench.boundingBoxHelper = new THREE.Box3Helper (bench.boundingBox, 0xffff00);
+				this.add (bench.boundingBoxHelper);
+				bench.boundingBoxHelper.visible = true;
 
-				this.add (bench0);
+				this.add (bench);
 
-				this.collisionBoxArray.push(bench0.boundingBox);
+				this.collisionBoxArray.push(bench.boundingBox);
+
+				// genShadows(bench);
 			}
 		}
 
@@ -204,6 +230,7 @@ class MyScene extends THREE.Scene {
 		boundingBox.getSize(vector);
 		console.log (vector);
 		*/
+		console.log(nShadows);
 	}
 
 	initStats() {
@@ -310,17 +337,39 @@ class MyScene extends THREE.Scene {
 		// La luz ambiental solo tiene un color y una intensidad
 		// Se declara como   var   y va a ser una variable local a este método
 		//    se hace así puesto que no va a ser accedida desde otros métodos
-		var ambientLight = new THREE.AmbientLight(0xccddee, 0.70);
+		var ambientLight = new THREE.AmbientLight(0xccddee, 0.6);
+		var directionLight = new THREE.DirectionalLight(0xc9fcf9,0.9);
+		directionLight.position.set(50,50,100);
+
+		var shadowRes = 4096;
+
+		//Configuracion de las luces
+		directionLight.castShadow = true;
+		directionLight.shadow.mapSize.width = shadowRes;
+		directionLight.shadow.mapSize.height = shadowRes;
+		directionLight.shadow.camera.near = 0.5;
+		directionLight.shadow.camera.far = 200;
+
+		var dirLightSize = 50;
+
+		directionLight.shadow.camera.left = -dirLightSize;
+		directionLight.shadow.camera.bottom = -dirLightSize;
+		directionLight.shadow.camera.right = dirLightSize;
+		directionLight.shadow.camera.top = dirLightSize;
+
 		// La añadimos a la escena
 		this.add (ambientLight);
+		this.add (directionLight);
 
 		// Se crea una luz focal que va a ser la luz principal de la escena
 		// La luz focal, además tiene una posición, y un punto de mira
 		// Si no se le da punto de mira, apuntará al (0,0,0) en coordenadas del mundo
 		// En este caso se declara como   this.atributo   para que sea un atributo accesible desde otros métodos.
 		this.spotLight = new THREE.SpotLight( 0xffffff, this.guiControls.lightIntensity );
-		this.spotLight.position.set( 60, 60, 40 );
-		this.add (this.spotLight);
+		this.spotLight.position.set( 0, 1, 0 );
+		// this.add (this.spotLight);
+
+		this.add(new THREE.CameraHelper(directionLight.shadow.camera));
 	}
 
 	setLightIntensity (valor) {
