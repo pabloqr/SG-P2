@@ -1,7 +1,6 @@
 // Clases de la biblioteca
 import * as THREE from './libs/three.module.js'
 import { GUI } from './libs/dat.gui.module.js'
-import { TrackballControls } from './libs/TrackballControls.js'
 import { Stats } from './libs/stats.module.js'
 import { Object3D } from './libs/three.module.js';
 
@@ -10,7 +9,6 @@ import { Church } from './Church.js';
 import { Column } from './Column.js';
 import { Fachade } from './Fachade.js';
 import { Clock } from './Clock.js';
-import { ClockHand } from './ClockHand.js';
 import { ClockPendulus } from './ClockPendulus.js';
 import { ChurchBench } from './ChurchBench.js';
 import { Chandelier } from './Chandelier.js';
@@ -19,6 +17,8 @@ import { Chandelier } from './Chandelier.js';
 /**dw
  * Usaremos una clase derivada de la clase Scene de Three.js para llevar el control de la escena y de todo lo que ocurre en ella.
  */
+var doorAngle = 0;
+
 var nShadows = 0;
 function genShadows(obj)
 {
@@ -160,7 +160,7 @@ class MyScene extends THREE.Scene {
 		// this.clockHandMinute.boundingBoxHelper.visible = true;
 
 		this.pickableObjects.push(this.clockModel.getHandMinutes());//He intentado usar bounding box pero da error el raycaster !!!!
-		this.pickableObjects.push(this.clockModel.getHandMinutes());
+		this.pickableObjects.push(this.clockModel.getHandHours());
 
 		// Creación de bancos
 		var benchScale = 0.2;
@@ -182,8 +182,6 @@ class MyScene extends THREE.Scene {
 				this.add (bench);
 
 				this.collisionBoxArray.push(bench.boundingBox);
-
-				// genShadows(bench);
 			}
 		}
 
@@ -204,18 +202,6 @@ class MyScene extends THREE.Scene {
 		this.add (fachade);
 		this.add (this.clockModel);
 		this.add (chandelier);
-
-		/*
-		var boundingBox = new THREE.Box3 ().setFromObject (church);
-		var boundingBoxHelper = new THREE.Box3Helper (boundingBox, 0xffff00);
-		this.add (boundingBoxHelper);
-		boundingBoxHelper.visible = true;
-
-		var vector = new THREE.Vector3 ();
-		boundingBox.getSize(vector);
-		console.log (vector);
-		*/
-		console.log(nShadows);
 	}
 
 	initStats() {
@@ -648,6 +634,7 @@ class MyScene extends THREE.Scene {
 		requestAnimationFrame(() => this.update())
 
 		this.updateClockModel();
+
 	}
 }
 
