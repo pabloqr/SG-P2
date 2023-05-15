@@ -56,7 +56,7 @@ class MyScene extends THREE.Scene {
 		this.renderer = this.createRenderer(myCanvas);
 
 		this.renderer.shadowMap.enabled = true;
-		this.renderer.shadowMap.type = THREE.PCFShadowMap;
+		this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 		// Se añade a la gui los controles para manipular los elementos de esta clase
 		this.gui = this.createGUI ();
@@ -152,28 +152,15 @@ class MyScene extends THREE.Scene {
 		// Creación del reloj (modelo jerárquico)
 		this.clockModel = new Clock ();
 		this.clockModel.position.set(29,0,2);
-		var clockHandMinute = new ClockHand("clockHandMinute");
-		var clockHandHour = new ClockHand("clockHandHour",0.05,0.2);
-		var clockPendulus = new ClockPendulus();
-		this.clockHandMinutesAngle = Math.PI/2;
-		this.clockHandHourAngle = this.clockHandMinutesAngle/12;
-		clockHandHour.position.set(-0.9,4.5);
-		clockHandMinute.position.set(-0.92,4.5);
-		clockHandHour.rotation.set(-this.clockHandMinutesAngle/12+Math.PI/2,Math.PI/2,0);
-		clockHandMinute.rotation.set(-this.clockHandMinutesAngle+Math.PI/2,Math.PI/2,0);
-		this.clockHandHour = clockHandHour;
-		this.clockHandMinute = clockHandMinute;
-		genShadows(this.clockModel);
 
-		this.add(clockPendulus);
 
 		// this.clockHandMinute.boundingBox = new THREE.Box3 ().setFromObject (this.clockHandMinute);
 		// this.clockHandMinute.boundingBoxHelper = new THREE.Box3Helper (this.clockHandMinute.boundingBox, 0x0000ff);
 		// this.add (this.clockHandMinute.boundingBoxHelper);
 		// this.clockHandMinute.boundingBoxHelper.visible = true;
 
-		this.pickableObjects.push(this.clockHandMinute);//He intentado usar bounding box pero da error el raycaster !!!!
-		this.pickableObjects.push(this.clockHandHour);
+		this.pickableObjects.push(this.clockModel.getHandMinutes());//He intentado usar bounding box pero da error el raycaster !!!!
+		this.pickableObjects.push(this.clockModel.getHandMinutes());
 
 		// Creación de bancos
 		var benchScale = 0.2;
@@ -216,8 +203,6 @@ class MyScene extends THREE.Scene {
 		this.add (church);
 		this.add (fachade);
 		this.add (this.clockModel);
-		this.clockModel.add (clockHandHour);
-		this.clockModel.add (clockHandMinute);
 		this.add (chandelier);
 
 		/*
@@ -337,11 +322,14 @@ class MyScene extends THREE.Scene {
 		// La luz ambiental solo tiene un color y una intensidad
 		// Se declara como   var   y va a ser una variable local a este método
 		//    se hace así puesto que no va a ser accedida desde otros métodos
-		var ambientLight = new THREE.AmbientLight(0xccddee, 0.6);
+		var dirLightTarget = new THREE.Object3D();
+		dirLightTarget.position.set(0,15,0);
+		var ambientLight = new THREE.AmbientLight(0xccddee, 2/*0.6 */);
 		var directionLight = new THREE.DirectionalLight(0xc9fcf9,0.9);
-		directionLight.position.set(50,50,100);
+		directionLight.position.set(-50,65,100);
+		directionLight.target = dirLightTarget;
 
-		var shadowRes = 4096;
+		var shadowRes = 2048;
 
 		//Configuracion de las luces
 		directionLight.castShadow = true;
@@ -360,6 +348,7 @@ class MyScene extends THREE.Scene {
 		// La añadimos a la escena
 		this.add (ambientLight);
 		this.add (directionLight);
+		this.add(dirLightTarget);
 
 		// Se crea una luz focal que va a ser la luz principal de la escena
 		// La luz focal, además tiene una posición, y un punto de mira
@@ -594,11 +583,7 @@ class MyScene extends THREE.Scene {
 
 		if(this.sceneState == MyScene.PICKING_HOURS || this.sceneState == MyScene.PICKING_MINUTES )
 		{
-			// var center = this.clockHandHour.position;
-
-			var center = new THREE.Vector3();
-
-			this.clockHandHour.getWorldPosition ( center );
+			var center = this.clockModel.getClockCenter();
 
 			this.raycaster.setFromCamera(this.mouse,this.camera);
 	
@@ -626,54 +611,18 @@ class MyScene extends THREE.Scene {
 			{
 				if(this.sceneState == MyScene.PICKING_HOURS )
 				{
-					var delta = angle - ((this.clockHandHourAngle) % (Math.PI*2));
-	
-					if((delta)>Math.PI) 
-					{
-						delta-=Math.PI*2;
-					}
-					else if((delta)<-Math.PI) 
-					{
-						delta+=Math.PI*2;
-					}
-	
-					this.clockHandMinutesAngle += delta*12;
-					this.clockHandHourAngle += delta;
-					this.clockHandMinute.rotation.x = -this.clockHandMinutesAngle+Math.PI/2;
-					this.clockHandHour.rotation.x = -this.clockHandHourAngle+Math.PI/2;
+					this.clockModel.setHours(angle);
 				}
 				else
 				{
-					var delta = angle - (this.clockHandMinutesAngle % (Math.PI*2));
-	
-					if(delta>Math.PI) 
-					{
-						delta-=Math.PI*2;
-					}
-					else if((delta)<-Math.PI) 
-					{
-						delta+=Math.PI*2;
-					}
-	
-					this.clockHandMinutesAngle += delta;
-					this.clockHandHourAngle += delta/12;
-					this.clockHandMinute.rotation.x = -this.clockHandMinutesAngle+Math.PI/2;
-					this.clockHandHour.rotation.x = -this.clockHandHourAngle+Math.PI/2;
+					this.clockModel.setMinutes(angle);
 				}
 			}
-
-
 		}
 		else
 		{
-			this.clockHandHour.rotateZ(handDelta/(60*12));
-			this.clockHandMinute.rotateZ(handDelta/60);
+			this.clockModel.incrementHour(handDelta);
 		}
-
-
-
-
-		// this.clockHandMinute.boundingBox.rotation = this.clockHandMinute.rotation;
 	}
 
 	update () {
