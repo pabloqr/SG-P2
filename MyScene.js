@@ -5,22 +5,23 @@ import { Stats } from './libs/stats.module.js'
 import { Object3D } from './libs/three.module.js';
 
 // Clases de mi proyecto
+import { Key } from './Key.js';
 import { Church } from './Church.js';
 import { Column } from './Column.js';
 import { Fachade } from './Fachade.js';
 import { Clock } from './Clock.js';
-import { ClockPendulus } from './ClockPendulus.js';
 import { ChurchBench } from './ChurchBench.js';
 import { Chandelier } from './Chandelier.js';
+import { Tween } from './libs/tween.esm.js';
 
 /// La clase fachada del modelo
 /**dw
  * Usaremos una clase derivada de la clase Scene de Three.js para llevar el control de la escena y de todo lo que ocurre en ella.
  */
 var doorAngle = 0;
+var clockTestHour = 0;
 
-var nShadows = 0;
-function genShadows(obj)
+function genShadows(obj)//no se usa
 {
 	obj.receiveShadow = true;
 	obj.traverseVisible((node)=>{
@@ -28,11 +29,8 @@ function genShadows(obj)
 		{ 
 			node.castShadow = true; 
 			node.receiveShadow = true;
-			console.log(node);
-			nShadows++;
 		} 
 	});
-	
 }
 
 function angleFromVector(v0,v1)//no se usa(entre 0 y 180)
@@ -153,12 +151,6 @@ class MyScene extends THREE.Scene {
 		this.clockModel = new Clock ();
 		this.clockModel.position.set(29,0,2);
 
-
-		// this.clockHandMinute.boundingBox = new THREE.Box3 ().setFromObject (this.clockHandMinute);
-		// this.clockHandMinute.boundingBoxHelper = new THREE.Box3Helper (this.clockHandMinute.boundingBox, 0x0000ff);
-		// this.add (this.clockHandMinute.boundingBoxHelper);
-		// this.clockHandMinute.boundingBoxHelper.visible = true;
-
 		this.pickableObjects.push(this.clockModel.getHandMinutes());//He intentado usar bounding box pero da error el raycaster !!!!
 		this.pickableObjects.push(this.clockModel.getHandHours());
 
@@ -198,10 +190,17 @@ class MyScene extends THREE.Scene {
 
 		this.collisionBoxArray.push (chandelier.boundingBox);
 
+		//llave
+		var key = new Key();
+		key.position.set(this.clockModel.position.x,0.59,this.clockModel.position.z);
+		// key.position.set(29,0.8,1);
+
+
 		this.add (church);
 		this.add (fachade);
 		this.add (this.clockModel);
 		this.add (chandelier);
+		this.add(key);
 	}
 
 	initStats() {
@@ -563,6 +562,7 @@ class MyScene extends THREE.Scene {
 		}
 	}
 
+	
 	updateClockModel()
 	{
 		var handDelta = Math.PI*2/60*this.deltaTime;//una vuelta en 1 minuto
@@ -609,6 +609,11 @@ class MyScene extends THREE.Scene {
 		{
 			this.clockModel.incrementHour(handDelta);
 		}
+
+		//probar si la hora es correcta
+		this.clockModel.testTime(10.5,this.deltaTime);
+		this.clockModel.openDoor(this.deltaTime);
+		this.clockModel.update();
 	}
 
 	update () {
@@ -634,7 +639,6 @@ class MyScene extends THREE.Scene {
 		requestAnimationFrame(() => this.update())
 
 		this.updateClockModel();
-
 	}
 }
 
