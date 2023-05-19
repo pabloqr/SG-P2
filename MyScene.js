@@ -166,8 +166,7 @@ class MyScene extends THREE.Scene {
 			this.collisionBoxArray.push(columna.boundingBox0);
 			this.collisionBoxArray.push(columna.boundingBox1);
 
-			//candles
-			
+			// candles
 			var candle0 = new Candle();
 			var candle1 = new Candle();
 			candle0.position.set(0,0,i*9-15);
@@ -214,17 +213,22 @@ class MyScene extends THREE.Scene {
 		}
 
 		// Creación del lampadario
-		var chandelier = new Chandelier (8, 4.0*Math.PI/9.0);
-		chandelier.position.set (-29.5, 0.0, 10.0);
-		chandelier.rotation.set (0.0, Math.PI/2.0, 0.0);
-		chandelier.scale.set (0.15, 0.15, 0.15);
+		this.chandelier = new Chandelier (8, 4.0*Math.PI/9.0);
+		this.chandelier.position.set (-29.5, 0.0, 10.0);
+		this.chandelier.rotation.set (0.0, Math.PI/2.0, 0.0);
+		this.chandelier.scale.set (0.15, 0.15, 0.15);
 
-		chandelier.boundingBox = new THREE.Box3 ().setFromObject (chandelier);
-		// chandelier.boundingBoxHelper = new THREE.Box3Helper (chandelier.boundingBox, 0xffff00);
-		// this.add (chandelier.boundingBoxHelper);
-		// chandelier.boundingBoxHelper.visible = true;
+		//this.add (new THREE.CameraHelper (this.chandelier.pointLights[0].shadow.camera));
+		//this.add (new THREE.CameraHelper (this.chandelier.pointLights[1].shadow.camera));
+		//this.add (new THREE.CameraHelper (this.chandelier.pointLights[2].shadow.camera));
 
-		this.collisionBoxArray.push (chandelier.boundingBox);
+		this.chandelier.boundingBox = new THREE.Box3 ().setFromObject (this.chandelier);
+		// this.chandelier.boundingBoxHelper = new THREE.Box3Helper (this.chandelier.boundingBox, 0xffff00);
+		// this.add (this.chandelier.boundingBoxHelper);
+		// this.chandelier.boundingBoxHelper.visible = true;
+
+		this.collisionBoxArray.push (this.chandelier.boundingBox);
+		this.pickableObjects.push (this.chandelier.moneyBox);
 
 		//llave
 		var key = new Key();
@@ -232,18 +236,17 @@ class MyScene extends THREE.Scene {
 		this.pickableObjects.push(key);
 		// key.position.set(29,0.8,1);
 
-
 		this.add (church);
 		this.add (fachade);
 		this.add (this.clockModel);
-		this.add (chandelier);
-		this.add(key);
-		this.add(this.doorHingeLeft);
-		this.add(this.doorHingeRight);
+		this.add (this.chandelier);
+		this.add (key);
+		this.add (this.doorHingeLeft);
+		this.add (this.doorHingeRight);
 	}
 
-	initStats() {
-
+	initStats()
+	{
 		var stats = new Stats();
 
 		stats.setMode(0); // 0: fps, 1: ms
@@ -269,7 +272,6 @@ class MyScene extends THREE.Scene {
 		this.cameraObj = new THREE.Object3D ();
 		this.cameraObj.position.set (0, 2, 0);
 		this.cameraObj.add (this.camera);
-		
 
 		this.cameraHAngle = 0.0;
 		this.cameraVAngle = 0.0;
@@ -372,7 +374,7 @@ class MyScene extends THREE.Scene {
 		// La añadimos a la escena
 		this.add (ambientLight);
 		this.add (directionLight);
-		this.add(dirLightTarget);
+		this.add (dirLightTarget);
 
 		// Se crea una luz focal que va a ser la luz principal de la escena
 		// La luz focal, además tiene una posición, y un punto de mira
@@ -443,50 +445,6 @@ class MyScene extends THREE.Scene {
 		}
 	}
 
-	onDoubleClick(event)
-	{
-		if(event.button == 0)
-		{
-
-			this.raycaster.setFromCamera(this.mouse,this.camera);
-
-			var pickedObjects = this.raycaster.intersectObjects(this.pickableObjects, true);
-
-			if(pickedObjects.length>0)
-			{
-				var selectedObject = pickedObjects[0].object.userData;
-				var selectedPoint = pickedObjects[0].point;
-				console.log("pick! "+selectedObject.name);
-				console.log(pickedObjects[0]);
-				switch(selectedObject.name)
-				{
-					case "clockHandHour":
-						this.sceneState = MyScene.PICKING_HOURS;
-						break;
-					case "clockHandMinute":
-						this.sceneState = MyScene.PICKING_MINUTES;
-						break;
-					case "key":
-						if(this.clockModel.isActive())
-						{
-							selectedObject.position.y = -10;
-							this.hasKey = true;
-						}
-						break;
-					case "candle":
-						selectedObject.toggleFire();
-						break;
-				}
-			}
-			else
-			{
-				this.sceneState = MyScene.NO_ACTION;
-				this.cameraRotation = false;
-			}
-		}
-		
-	}
-
 	onMouseUp (event)
 	{
 		if(this.sceneState == MyScene.NO_ACTION)
@@ -500,7 +458,7 @@ class MyScene extends THREE.Scene {
 
 	onMouseMove (event)
 	{
-		this.mouse = {x:0,y:0};
+		this.mouse = { x: 0, y: 0};
 
 		this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
 		this.mouse.y = 1 - 2 * (event.clientY / window.innerHeight);
@@ -530,6 +488,51 @@ class MyScene extends THREE.Scene {
 
 				this.camera.rotation.x = -this.cameraVAngle;
 				this.cameraObj.rotation.y = -this.cameraHAngle;
+			}
+		}
+	}
+
+	onDoubleClick(event)
+	{
+		if(event.button == 0)
+		{
+			this.raycaster.setFromCamera (this.mouse, this.camera);
+
+			var pickedObjects = this.raycaster.intersectObjects (this.pickableObjects, true);
+
+			if(pickedObjects.length>0)
+			{
+				var selectedObject = pickedObjects[0].object.userData;
+				var selectedPoint = pickedObjects[0].point;
+				//console.log("pick! "+selectedObject.name);
+				//console.log(pickedObjects[0]);
+				switch(selectedObject.name)
+				{
+					case "clockHandHour":
+						this.sceneState = MyScene.PICKING_HOURS;
+						break;
+					case "clockHandMinute":
+						this.sceneState = MyScene.PICKING_MINUTES;
+						break;
+					case "key":
+						if(this.clockModel.isActive())
+						{
+							selectedObject.position.y = -10;
+							this.hasKey = true;
+						}
+						break;
+					case "candle":
+						selectedObject.toggleFire();
+						break;
+					case "moneyBox":
+						this.chandelier.powerRandomCandles();
+						break;
+				}
+			}
+			else
+			{
+				this.sceneState = MyScene.NO_ACTION;
+				this.cameraRotation = false;
 			}
 		}
 	}
@@ -607,10 +610,9 @@ class MyScene extends THREE.Scene {
 				{
 					this.jugador.position.z = lastPosition.z;
 				}
-			})
+			});
 		}
 	}
-
 	
 	updateClockModel()
 	{
@@ -665,8 +667,8 @@ class MyScene extends THREE.Scene {
 		this.clockModel.update();
 	}
 
-	update () {
-
+	update ()
+	{
 		if (this.stats) this.stats.update();
 
 		this.deltaTime = this.clock.getDelta();
@@ -678,6 +680,7 @@ class MyScene extends THREE.Scene {
 		//this.cameraControl.update();
 
 		// Se actualiza el resto del modelo
+		this.chandelier.update();
 
 		// Le decimos al renderizador "visualiza la escena que te indico usando la cámara que te estoy pasando"
 		this.renderer.render (this, this.getCamera());
@@ -697,7 +700,6 @@ class MyScene extends THREE.Scene {
 			this.elapsedSecondsCandle = 0;
 		}
 		this.elapsedSecondsCandle+=this.deltaTime
-
 	}
 }
 
@@ -717,7 +719,7 @@ $(function () {
 	window.addEventListener ("keydown", (event) => scene.keyboardKeyDown (event));
 	window.addEventListener ("keyup", (event) => scene.keyboardKeyUp (event));
 
-	window.addEventListener("dblclick", (event) => scene.onDoubleClick(event));
+	window.addEventListener ("dblclick", (event) => scene.onDoubleClick (event));
 
 	// Que no se nos olvide, la primera visualización.
 	scene.update();

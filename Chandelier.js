@@ -1,5 +1,9 @@
+// Clases de la biblioteca
 import * as THREE from './libs/three.module.js'
 import { CSG } from './libs/CSG-v2.js'
+
+// Clases del proyecto
+import { Candle } from './ElectricCandle.js';
 
 class Chandelier extends THREE.Object3D {
 	constructor (chandelierRadius = 8, chandelierRotation = Math.PI/3.0)
@@ -11,7 +15,7 @@ class Chandelier extends THREE.Object3D {
 
 		var loader = new THREE.TextureLoader ();
 		var chandelierTexture = loader.load ("imgs/Wood_024_basecolor.jpg");
-		var moenyBoxTexture = loader.load ("imgs/Wood_024_basecolor.jpg")
+		var moneyBoxTexture = loader.load ("imgs/Wood_024_basecolor.jpg")
 
 		chandelierTexture.wrapT = THREE.RepeatWrapping;
 		chandelierTexture.wrapS = THREE.RepeatWrapping;
@@ -19,51 +23,315 @@ class Chandelier extends THREE.Object3D {
 
 		var chandelierMaterial = new THREE.MeshPhongMaterial ({ map : chandelierTexture, color : 0xffffff });
 
-		moenyBoxTexture.wrapT = THREE.RepeatWrapping;
-		moenyBoxTexture.wrapS = THREE.RepeatWrapping;
-		moenyBoxTexture.repeat.set (0.75, 0.75);
+		moneyBoxTexture.wrapT = THREE.RepeatWrapping;
+		moneyBoxTexture.wrapS = THREE.RepeatWrapping;
+		moneyBoxTexture.repeat.set (0.75, 0.75);
 
-		var moneyBoxMaterial = new THREE.MeshPhongMaterial ({ map : moenyBoxTexture, color : 0xffffff })
+		var moneyBoxMaterial = new THREE.MeshPhongMaterial ({ map : moneyBoxTexture, color : 0xffffff });
+
+		// Opciones del lampadario
+		this.chandelierOptions = {
+			l : chandelierRadius,
+			r : chandelierRotation
+		};
 
 		// Caja para las monedas
-		var moneyBoxGeometry = new MoneyBox (chandelierRadius/8.0);
-		moneyBoxGeometry.translate (0.0, chandelierRadius+chandelierRadius/20.0, chandelierRadius/3.0-chandelierRadius/14.0);
+		var moneyBoxGeometry = new MoneyBox (this.chandelierOptions.l/8.0);
+		moneyBoxGeometry.translate (0.0, this.chandelierOptions.l+this.chandelierOptions.l/20.0, this.chandelierOptions.l/3.0-this.chandelierOptions.l/14.0);
 
 		var moneyBoxMesh = new THREE.Mesh (moneyBoxGeometry, moneyBoxMaterial);
+		
+		this.moneyBox = new THREE.Object3D ();
+		this.moneyBox.name = "moneyBox";
+		moneyBoxMesh.userData = this.moneyBox;
+		this.moneyBox.add (moneyBoxMesh);
+		
+		// Para habilitar las sombras
+		moneyBoxMesh.castShadow = true;
+		moneyBoxMesh.receiveShadow = true;
 
 		// Geometrías para construir el lampadario
 		// Base para las velas
-		var holderGeometry = new TopHolder (chandelierRadius, chandelierRotation);
-		holderGeometry.translate (0.0, chandelierRadius, chandelierRadius/16.0)
+		var holderGeometry = new TopHolder (this.chandelierOptions.l, this.chandelierOptions.r);
+		holderGeometry.translate (0.0, this.chandelierOptions.l, this.chandelierOptions.l/16.0)
 
 		var holderMesh = new THREE.Mesh (holderGeometry, chandelierMaterial);
+
+		// Para habilitar las sombras
+		holderMesh.castShadow = true;
+		holderMesh.receiveShadow = true;
 		
 		// Laterales
-		var lateralGeometryLeft = new Lateral (chandelierRadius);
-		lateralGeometryLeft.translate (0.0, 0.0, chandelierRadius);
-		lateralGeometryLeft.rotateY (-chandelierRotation/2.0);
-		lateralGeometryLeft.translate (0.0, chandelierRadius, -chandelierRadius+chandelierRadius/16.0);
-		var lateralGeometryRight = new Lateral (chandelierRadius);
-		lateralGeometryRight.translate (0.0, 0.0, chandelierRadius);
-		lateralGeometryRight.rotateY (chandelierRotation/2.0);
-		lateralGeometryRight.translate (0.0, chandelierRadius, -chandelierRadius+chandelierRadius/16.0);
+		var lateralGeometryLeft = new Lateral (this.chandelierOptions.l);
+		lateralGeometryLeft.translate (0.0, 0.0, this.chandelierOptions.l);
+		lateralGeometryLeft.rotateY (-this.chandelierOptions.r/2.0);
+		lateralGeometryLeft.translate (0.0, this.chandelierOptions.l, -this.chandelierOptions.l+this.chandelierOptions.l/16.0);
+		var lateralGeometryRight = new Lateral (this.chandelierOptions.l);
+		lateralGeometryRight.translate (0.0, 0.0, this.chandelierOptions.l);
+		lateralGeometryRight.rotateY (this.chandelierOptions.r/2.0);
+		lateralGeometryRight.translate (0.0, this.chandelierOptions.l, -this.chandelierOptions.l+this.chandelierOptions.l/16.0);
 
 		var lateralMeshLeft = new THREE.Mesh (lateralGeometryLeft, chandelierMaterial);
+		
+		// Para habilitar las sombras
+		lateralMeshLeft.castShadow = true;
+		lateralMeshLeft.receiveShadow = true;
+		
 		var lateralMeshRight = new THREE.Mesh (lateralGeometryRight, chandelierMaterial);
 
+		// Para habilitar las sombras
+		lateralMeshRight.castShadow = true;
+		lateralMeshRight.receiveShadow = true;
+
 		// Base
-		var baseGeometry = new Base (chandelierRadius);
+		var baseGeometry = new Base (this.chandelierOptions.l);
 		var baseMesh = new THREE.Mesh (baseGeometry, chandelierMaterial);
+
+		// Para habilitar las sombras
+		baseMesh.castShadow = true;
+		baseMesh.receiveShadow = true;
 
 		// Objeto que almacena el lampadario
 		var chandelier = new THREE.Object3D ();
 		chandelier.add (holderMesh);
-		chandelier.add (moneyBoxMesh);
+		chandelier.add (this.moneyBox);
 		chandelier.add (lateralMeshLeft);
 		chandelier.add (lateralMeshRight);
 		chandelier.add (baseMesh);
 
+		// Velas
+		this.numCandles = [];
+		this.totalNumCandles = 0;
+		this.candles = [];
+		this.candlesPowered = [ 0, 0, 0 ];
+		
+		var numCandles = 16;
+		
+		var heightVar = 0.3;
+		var widthVar = 0.8;
+
+		for (var i = 0; i < 4; ++i) {
+
+			var angle = this.chandelierOptions.r / (numCandles-1);
+			var alpha = (2.0*Math.PI)-(this.chandelierOptions.r/2.0);
+
+			var candlesRow = [];
+
+			for (var j = 0; j < numCandles; ++j) {
+
+				var x = (this.chandelierOptions.l-(widthVar*(i+1))) * Math.cos (alpha) - this.chandelierOptions.l + 2.1;
+				var z = (this.chandelierOptions.l-(widthVar*(i))) * Math.sin (alpha);
+	
+				var candle = new Candle ();
+				candle.scale.set (0.25, 0.25, 0.25);
+				candle.position.set (z, this.chandelierOptions.l + (0.9 + heightVar*i), x);
+
+				candlesRow.push (candle);
+
+				if (candle.candlePower) {
+					
+					if (j < 5) this.candlesPowered[0]++;
+					else if (5 <= j && j < numCandles-5) this.candlesPowered[1]++;
+					else this.candlesPowered[2]++;
+				}
+				
+				chandelier.add (candle);
+	
+				alpha += angle;
+				this.totalNumCandles++;
+			}
+
+			this.numCandles.push (numCandles);
+			this.candles.push (candlesRow);
+			numCandles--;
+		}
+
+		// Se crea la luz
+		this.createLights();
+
 		this.add (chandelier);
+
+		// Reloj de referencia para las actualizaciones
+		this.refClock = new THREE.Clock ();
+		this.secondsElapsed = 0.0;
+	}
+
+	powerOffCandles ()
+	{
+		if (this.candlesPowered[0] || this.candlesPowered[2] || this.candlesPowered[3]) {
+
+			for (var i = 0; i < this.candles.length; ++i) {
+				for (var j = 0; j < this.candles[i].length; ++j) {
+
+					this.candles[i][j].candlePower = false;
+				}
+			}
+		}
+
+		this.candlesPowered = [ 0, 0, 0 ];
+	}
+
+	powerRandomCandles ()
+	{
+		var numCandles = (Math.random() * (this.totalNumCandles - 1) + 1).toFixed();
+
+		if (numCandles > 0) {
+			
+			this.powerOffCandles();
+
+			for (var i = 0; i < numCandles; ++i) {
+				
+				var row = (Math.random() * (this.candles.length-1)).toFixed();
+				var position = (Math.random() * (this.candles[row].length-1)).toFixed();
+				var posAux = position;
+								
+				while (this.candles[row][posAux].candlePower == true) {
+					
+					posAux = (posAux+1) % this.candles[row].length;
+
+					if (posAux == position) {
+						
+						row = (row+1) % this.candles.length;
+
+						position %= this.candles[row].length;
+						posAux %= this.candles[row].length;
+					}
+				}
+				
+				position = posAux;
+				this.candles[row][position].candlePower = true;
+
+				if (position < 5) this.candlesPowered[0]++;
+				else if (5 <= position && position < this.numCandles.length-5) this.candlesPowered[1]++;
+				else this.candlesPowered[2]++;
+			}
+
+			for (var i = 0; i < this.candles.length; ++i) {
+				for (var j = 0; j < this.candles[i].length; ++j) {
+
+					this.candles[i][j].setCandlePower();
+				}
+			}
+		}
+	}
+
+	createLights ()
+	{
+		this.pointLights = [];
+
+		var angle = this.chandelierOptions.r / (3-0.5);
+		var alpha = (2.0*Math.PI)-(this.chandelierOptions.r/2.5);
+		
+		var widthVar = 0.8;
+
+		for (var i = 0; i < 3; ++i) {
+
+			var pointLight = new THREE.PointLight (0xffe138, 0.3, 0, 0);
+
+			pointLight.position.set (
+				(this.chandelierOptions.l-widthVar) * Math.sin (alpha), 
+				this.chandelierOptions.l + 3.0, 
+				(this.chandelierOptions.l-(widthVar*2)) * Math.cos (alpha) - this.chandelierOptions.l + 2.1);
+				pointLight.visible = (this.candlesPowered[i]) ? true : false;
+	
+			alpha += angle;
+
+			// Opciones para las sombras
+			pointLight.castShadow = true;
+			pointLight.shadow.mapSize.width = 512;
+			pointLight.shadow.mapSize.height = 512;
+			pointLight.shadow.camera.near = 0.5;
+			pointLight.shadow.camera.far = 500;
+
+			this.pointLights.push (pointLight);
+			this.add (pointLight);
+		}
+
+		/*
+		// LUZ IZQUIERDA
+		var pointLightLeft = new THREE.PointLight (0xffe138, 0.3, 0, 0);
+		pointLightLeft.position.set (
+			(this.chandelierOptions.l-widthVar) * Math.sin (alpha), 
+			this.chandelierOptions.l + 3.0, 
+			(this.chandelierOptions.l-(widthVar*2)) * Math.cos (alpha) - this.chandelierOptions.l + 2.1);
+		pointLightLeft.visible = (this.candlesPowered[0]) ? true : false;
+
+		alpha += angle;
+
+		// Opciones para las sombras
+		pointLightLeft.castShadow = true;
+		pointLightLeft.shadow.mapSize.width = 512;
+		pointLightLeft.shadow.mapSize.height = 512;
+		pointLightLeft.shadow.camera.near = 0.5;
+		pointLightLeft.shadow.camera.far = 500;
+
+		this.pointLights.push (pointLightCentral)
+		this.add (pointLightLeft);
+
+		// LUZ CENTRAL
+		var pointLightCentral = new THREE.PointLight (0xffe138, 0.3, 0, 0);
+		pointLightCentral.position.set (
+			(this.chandelierOptions.l-widthVar) * Math.sin (alpha), 
+			this.chandelierOptions.l + 3.0, 
+			(this.chandelierOptions.l-(widthVar*2)) * Math.cos (alpha) - this.chandelierOptions.l + 2.1);
+		pointLightCentral.visible = (this.candlesPowered[1]) ? true : false;
+
+		alpha += angle;
+
+		// Opciones para las sombras
+		pointLightCentral.castShadow = true;
+		pointLightCentral.shadow.mapSize.width = 512;
+		pointLightCentral.shadow.mapSize.height = 512;
+		pointLightCentral.shadow.camera.near = 0.5;
+		pointLightCentral.shadow.camera.far = 500;
+
+		this.add (pointLightCentral);
+
+		// LUZ DERECHA
+		var pointLightRight = new THREE.PointLight (0xffe138, 0.3, 0, 0);
+		pointLightRight.position.set (
+			(this.chandelierOptions.l-widthVar) * Math.sin (alpha), 
+			this.chandelierOptions.l + 3.0, 
+			(this.chandelierOptions.l-(widthVar*2)) * Math.cos (alpha) - this.chandelierOptions.l + 2.1);
+		pointLightRight.visible = (this.candlesPowered[2]) ? true : false;
+
+		// Opciones para las sombras
+		pointLightRight.castShadow = true;
+		pointLightRight.shadow.mapSize.width = 512;
+		pointLightRight.shadow.mapSize.height = 512;
+		pointLightRight.shadow.camera.near = 0.5;
+		pointLightRight.shadow.camera.far = 500;
+
+		this.add (pointLightRight);
+		*/
+	}
+
+	update ()
+	{
+		var clockDelta = this.refClock.getDelta();
+		this.secondsElapsed += clockDelta;
+		
+		if (this.secondsElapsed >= 0.15) {
+
+			for (var i = 0; i < this.candlesPowered.length; ++i) {
+
+				if (this.candlesPowered[i]) {
+
+					this.pointLights[i].visible = true;
+
+					var min = (this.candlesPowered[i] * 0.3) / this.numCandles[i];
+					var max = (this.candlesPowered[i] * 0.5) / this.numCandles[i];
+		
+					this.pointLights[i].intensity = Math.random() * (max - min) + min;
+					this.secondsElapsed = 0.0;
+				}
+				else {
+					
+					this.pointLights[i].visible = false;
+					this.secondsElapsed = 0.0;
+				}
+			}
+		}
 	}
 }
 
