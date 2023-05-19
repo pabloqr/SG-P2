@@ -302,5 +302,10 @@ class Clock extends THREE.Object3D {
 	update() {
 		TWEEN.update();
 	}
+
+	isActive()
+	{
+		return this.active;
+	}
 }
 export { Clock }

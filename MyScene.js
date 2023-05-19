@@ -3,6 +3,7 @@ import * as THREE from './libs/three.module.js'
 import { GUI } from './libs/dat.gui.module.js'
 import { Stats } from './libs/stats.module.js'
 import { Object3D } from './libs/three.module.js';
+import { Tween } from './libs/tween.esm.js';
 
 // Clases de mi proyecto
 import { Key } from './Key.js';
@@ -11,8 +12,9 @@ import { Column } from './Column.js';
 import { Fachade } from './Fachade.js';
 import { Clock } from './Clock.js';
 import { ChurchBench } from './ChurchBench.js';
+import { Door } from './Door.js';
 import { Chandelier } from './Chandelier.js';
-import { Tween } from './libs/tween.esm.js';
+
 
 /// La clase fachada del modelo
 /**dw
@@ -49,6 +51,7 @@ class MyScene extends THREE.Scene {
 		MyScene.PICKING_HOURS = 2;
 
 		this.sceneState = MyScene.NO_ACTION;
+		this.hasKey = false;
 
 		// Lo primero, crear el visualizador, pasándole el lienzo sobre el que realizar los renderizados.
 		this.renderer = this.createRenderer(myCanvas);
@@ -117,7 +120,20 @@ class MyScene extends THREE.Scene {
 		// Creación de la fachada
 		var fachade = new Fachade ();
 
-		// genShadows(fachade);
+		
+		//Puertas
+		var doorOffset = 4;
+		var doorLeft = new Door();
+		doorLeft.position.x = -doorOffset;
+		this.doorHingeLeft = new THREE.Object3D();
+		this.doorHingeLeft.position.set(doorOffset,0,32.3604);
+		var doorRight = new Door();
+		doorRight.scale.x=-1;
+		doorRight.position.x = doorOffset;
+		this.doorHingeRight = new THREE.Object3D();
+		this.doorHingeRight.position.set(-doorOffset,0,32.3604);
+		this.doorHingeLeft.add(doorLeft);
+		this.doorHingeRight.add(doorRight);
 
 		// Creación de columnas
 		var columnSeparation = 21;
@@ -150,6 +166,8 @@ class MyScene extends THREE.Scene {
 		// Creación del reloj (modelo jerárquico)
 		this.clockModel = new Clock ();
 		this.clockModel.position.set(29,0,2);
+		this.clockModel.boundingBox = new THREE.Box3(new THREE.Vector3(-1+29,0,-1+2),new THREE.Vector3(1+29,2,1+2));
+		this.collisionBoxArray.push(this.clockModel.boundingBox);
 
 		this.pickableObjects.push(this.clockModel.getHandMinutes());//He intentado usar bounding box pero da error el raycaster !!!!
 		this.pickableObjects.push(this.clockModel.getHandHours());
@@ -193,6 +211,7 @@ class MyScene extends THREE.Scene {
 		//llave
 		var key = new Key();
 		key.position.set(this.clockModel.position.x,0.59,this.clockModel.position.z);
+		this.pickableObjects.push(key);
 		// key.position.set(29,0.8,1);
 
 
@@ -201,6 +220,8 @@ class MyScene extends THREE.Scene {
 		this.add (this.clockModel);
 		this.add (chandelier);
 		this.add(key);
+		this.add(this.doorHingeLeft);
+		this.add(this.doorHingeRight);
 	}
 
 	initStats() {
@@ -426,6 +447,13 @@ class MyScene extends THREE.Scene {
 						break;
 					case "clockHandMinute":
 						this.sceneState = MyScene.PICKING_MINUTES;
+						break;
+					case "key":
+						if(this.clockModel.isActive())
+						{
+							selectedObject.position.y = -10;
+							this.hasKey = true;
+						}
 						break;
 				}
 			}

@@ -10,6 +10,7 @@ class Key extends THREE.Object3D
 
 		var materialLoader = new MTLLoader ();
 		var objectLoader = new OBJLoader ();
+		this.name = "key";
 
 		materialLoader.load (
 			"models/key.mtl",
@@ -21,6 +22,10 @@ class Key extends THREE.Object3D
 						this.add (object);
 						var scale = 0.1;
 						object.scale.set(scale,scale,scale);
+						for(var i = 0; i<object.children.length;i++)
+						{
+							object.children[i].userData = this;
+						}
 						// object.traverseVisible( function( node ) { if ( node instanceof THREE.Mesh ) 
 						// 	{ 
 						// 		node.castShadow = true; 
