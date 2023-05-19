@@ -58,6 +58,8 @@ class MyScene extends THREE.Scene {
 		this.renderer = this.createRenderer(myCanvas);
 
 		this.renderer.shadowMap.enabled = true;
+		// this.renderer.shadowMap.type = THREE.BasicShadowMap;
+		// this.renderer.shadowMap.type = THREE.PCFShadowMap;
 		this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 		// Se añade a la gui los controles para manipular los elementos de esta clase
@@ -87,12 +89,15 @@ class MyScene extends THREE.Scene {
 
 		// Y unos ejes. Imprescindibles para orientarnos sobre dónde están las cosas
 		this.axis = new THREE.AxesHelper (5);
-		this.add (this.axis);
+		// this.add (this.axis);
 
 		// Por último creamos el modelo.
 		// El modelo puede incluir su parte de la interfaz gráfica de usuario. Le pasamos la referencia a 
 		// la gui y el texto bajo el que se agruparán los controles de la interfaz que añada el modelo.
 		
+		this.elapsedSecondsCandle = 0;
+		this.candles = [];
+
 		// Creación de iglesia
 		var church = new Church ();
 		church.bb0 = new THREE.Box3(new THREE.Vector3(-31,0,-30),new THREE.Vector3(-30,10,40));
@@ -102,12 +107,12 @@ class MyScene extends THREE.Scene {
 		church.bb4 = new THREE.Box3(new THREE.Vector3(-30,0,32.5),new THREE.Vector3(-8,10,35));
 		church.bb5 = new THREE.Box3(new THREE.Vector3(8,0,32.5),new THREE.Vector3(30,10,35));
 
-		this.add(new THREE.Box3Helper(church.bb0,0xffff00));
-		this.add(new THREE.Box3Helper(church.bb1,0xffff00));
-		this.add(new THREE.Box3Helper(church.bb2,0xffff00));
-		this.add(new THREE.Box3Helper(church.bb3,0xffff00));
-		this.add(new THREE.Box3Helper(church.bb4,0xffff00));
-		this.add(new THREE.Box3Helper(church.bb5,0xffff00));
+		// this.add(new THREE.Box3Helper(church.bb0,0xffff00));
+		// this.add(new THREE.Box3Helper(church.bb1,0xffff00));
+		// this.add(new THREE.Box3Helper(church.bb2,0xffff00));
+		// this.add(new THREE.Box3Helper(church.bb3,0xffff00));
+		// this.add(new THREE.Box3Helper(church.bb4,0xffff00));
+		// this.add(new THREE.Box3Helper(church.bb5,0xffff00));
 
 		this.collisionBoxArray.push(church.bb0);
 		this.collisionBoxArray.push(church.bb1);
@@ -150,18 +155,19 @@ class MyScene extends THREE.Scene {
 			columna.boundingBox0 = new THREE.Box3(min0,max0);
 			columna.boundingBox1 = new THREE.Box3(min1,max1);
 			
-			columna.boundingBoxHelper0 = new THREE.Box3Helper (columna.boundingBox0, 0xffff00);
-			columna.boundingBoxHelper1 = new THREE.Box3Helper (columna.boundingBox1, 0xffff00);
-			this.add(columna.boundingBoxHelper0);
-			this.add(columna.boundingBoxHelper1);
+			// columna.boundingBoxHelper0 = new THREE.Box3Helper (columna.boundingBox0, 0xffff00);
+			// columna.boundingBoxHelper1 = new THREE.Box3Helper (columna.boundingBox1, 0xffff00);
+			// this.add(columna.boundingBoxHelper0);
+			// this.add(columna.boundingBoxHelper1);
 
-			columna.boundingBoxHelper0.visible = true;
-			columna.boundingBoxHelper1.visible = true;
+			// columna.boundingBoxHelper0.visible = true;
+			// columna.boundingBoxHelper1.visible = true;
 			this.add (columna);
 			this.collisionBoxArray.push(columna.boundingBox0);
 			this.collisionBoxArray.push(columna.boundingBox1);
 
 			//candles
+			
 			var candle0 = new Candle();
 			var candle1 = new Candle();
 			candle0.position.set(0,0,i*9-15);
@@ -169,6 +175,10 @@ class MyScene extends THREE.Scene {
 			candle1.scale.x = -1;
 			this.add(candle0);
 			this.add(candle1);
+			this.candles.push(candle0);
+			this.candles.push(candle1);
+			this.pickableObjects.push(candle0);
+			this.pickableObjects.push(candle1);
 		}
 
 		// Creación del reloj (modelo jerárquico)
@@ -193,9 +203,9 @@ class MyScene extends THREE.Scene {
 				bench.scale.set(benchScale,benchScale,benchScale);
 				
 				bench.boundingBox = new THREE.Box3 ().setFromObject (bench);
-				bench.boundingBoxHelper = new THREE.Box3Helper (bench.boundingBox, 0xffff00);
-				this.add (bench.boundingBoxHelper);
-				bench.boundingBoxHelper.visible = true;
+				// bench.boundingBoxHelper = new THREE.Box3Helper (bench.boundingBox, 0xffff00);
+				// this.add (bench.boundingBoxHelper);
+				// bench.boundingBoxHelper.visible = true;
 
 				this.add (bench);
 
@@ -210,9 +220,9 @@ class MyScene extends THREE.Scene {
 		chandelier.scale.set (0.15, 0.15, 0.15);
 
 		chandelier.boundingBox = new THREE.Box3 ().setFromObject (chandelier);
-		chandelier.boundingBoxHelper = new THREE.Box3Helper (chandelier.boundingBox, 0xffff00);
-		this.add (chandelier.boundingBoxHelper);
-		chandelier.boundingBoxHelper.visible = true;
+		// chandelier.boundingBoxHelper = new THREE.Box3Helper (chandelier.boundingBox, 0xffff00);
+		// this.add (chandelier.boundingBoxHelper);
+		// chandelier.boundingBoxHelper.visible = true;
 
 		this.collisionBoxArray.push (chandelier.boundingBox);
 
@@ -276,8 +286,8 @@ class MyScene extends THREE.Scene {
 		this.jugador.add(this.cameraObj);
 
 		this.jugador.boundingBox = new THREE.Box3 (min,max);
-		this.jugador.boundingBoxHelper = new THREE.Box3Helper (this.jugador.boundingBox, 0xffff00);
-		this.add (this.jugador.boundingBoxHelper);
+		// this.jugador.boundingBoxHelper = new THREE.Box3Helper (this.jugador.boundingBox, 0xffff00);
+		// this.add (this.jugador.boundingBoxHelper);
 		this.add (this.jugador);
 	}
 
@@ -372,7 +382,7 @@ class MyScene extends THREE.Scene {
 		this.spotLight.position.set( 0, 1, 0 );
 		// this.add (this.spotLight);
 
-		this.add(new THREE.CameraHelper(directionLight.shadow.camera));
+		// this.add(new THREE.CameraHelper(directionLight.shadow.camera));
 	}
 
 	setLightIntensity (valor) {
@@ -462,6 +472,9 @@ class MyScene extends THREE.Scene {
 							selectedObject.position.y = -10;
 							this.hasKey = true;
 						}
+						break;
+					case "candle":
+						selectedObject.toggleFire();
 						break;
 				}
 			}
@@ -675,6 +688,16 @@ class MyScene extends THREE.Scene {
 		requestAnimationFrame(() => this.update())
 
 		this.updateClockModel();
+
+		if(this.elapsedSecondsCandle > 0.07)
+		{
+			this.candles.forEach(candle => {
+				candle.update();
+			});
+			this.elapsedSecondsCandle = 0;
+		}
+		this.elapsedSecondsCandle+=this.deltaTime
+
 	}
 }
 

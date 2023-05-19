@@ -10,6 +10,6 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 3
-map_Bump ..imgs/Substance_graph_height.jpg
+map_Bump ../imgs/Substance_graph_height.jpg
 map_Kd ../imgs/Substance_graph_basecolor.jpg
 refl ../imgs/Substance_graph_metallic.jpg
