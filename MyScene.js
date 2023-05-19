@@ -14,6 +14,7 @@ import { Clock } from './Clock.js';
 import { ChurchBench } from './ChurchBench.js';
 import { Door } from './Door.js';
 import { Chandelier } from './Chandelier.js';
+import { Candle } from './Candle.js';
 
 
 /// La clase fachada del modelo
@@ -135,7 +136,7 @@ class MyScene extends THREE.Scene {
 		this.doorHingeLeft.add(doorLeft);
 		this.doorHingeRight.add(doorRight);
 
-		// Creación de columnas
+		// Creación de columnas y candelabros
 		var columnSeparation = 21;
 		var columnSize = 1.5;
 		for(var i = 0; i < 5; i++)
@@ -160,7 +161,14 @@ class MyScene extends THREE.Scene {
 			this.collisionBoxArray.push(columna.boundingBox0);
 			this.collisionBoxArray.push(columna.boundingBox1);
 
-			// genShadows(columna);
+			//candles
+			var candle0 = new Candle();
+			var candle1 = new Candle();
+			candle0.position.set(0,0,i*9-15);
+			candle1.position.set(0,0,i*9-15);
+			candle1.scale.x = -1;
+			this.add(candle0);
+			this.add(candle1);
 		}
 
 		// Creación del reloj (modelo jerárquico)
@@ -330,7 +338,7 @@ class MyScene extends THREE.Scene {
 		//    se hace así puesto que no va a ser accedida desde otros métodos
 		var dirLightTarget = new THREE.Object3D();
 		dirLightTarget.position.set(0,15,0);
-		var ambientLight = new THREE.AmbientLight(0xccddee, 2/*0.6 */);
+		var ambientLight = new THREE.AmbientLight(0xccddee, 0.6);
 		var directionLight = new THREE.DirectionalLight(0xc9fcf9,0.9);
 		directionLight.position.set(-50,65,100);
 		directionLight.target = dirLightTarget;
