@@ -7,13 +7,9 @@ class Candle extends THREE.Object3D {
 	{
 		super();
 
-		// Se crea la interfaz
-		//this.createGUI (gui, titleGui);
-
 		// Opciones de la llama
-		this.flameOffMaterial = new THREE.MeshLambertMaterial ({ color : 0xfaefd4 });
+		this.flameOffMaterial = new THREE.MeshLambertMaterial ({ color : 0xa39a83 });
 		this.flameOnMaterial = new THREE.MeshLambertMaterial ({ color : 0xfaefd4, emissive : 0xffe44a, emissiveIntensity : 1 });
-		//this.flameOnMaterial = new THREE.MeshLambertMaterial ({ color : 0x000000 });
 		this.candlePower = powerOn;
 
 		// Propiedades de la vela
@@ -34,9 +30,6 @@ class Candle extends THREE.Object3D {
 		candleMesh.castShadow = true; 
 		candleMesh.receiveShadow = true;
 
-		// Se crea la luz
-		//this.createLights();
-
 		// Se crea la llama
 		var flameGeometry = new Flame ();
 		flameGeometry.scale (1.5, 1.5, 1.5);
@@ -54,7 +47,6 @@ class Candle extends THREE.Object3D {
 	setCandlePower ()
 	{
 		this.flameMesh.material = (this.candlePower) ? this.flameOnMaterial : this.flameOffMaterial;
-		//this.pointLight.visible = (candlePower) ? true : false;
 	}
 
 	createGUI (gui, titleGui)
@@ -68,11 +60,6 @@ class Candle extends THREE.Object3D {
 
 		// Se añaden los componentes de la interfaz
 		folder.add (this.guiControls, 'candlePower').name ("Vela On/Off : ").onChange ((value) => this.setCandlePower (value));
-	}
-
-	update ()
-	{
-		
 	}
 }
 

@@ -153,7 +153,7 @@ class Chandelier extends THREE.Object3D {
 
 		// Reloj de referencia para las actualizaciones
 		this.refClock = new THREE.Clock ();
-		this.secondsElapsed = 0.0;
+		this.secondsElapsed = [ 0.0, 0.0, 0.0 ];
 	}
 
 	powerOffCandles ()
@@ -202,7 +202,7 @@ class Chandelier extends THREE.Object3D {
 				this.candles[row][position].candlePower = true;
 
 				if (position < 5) this.candlesPowered[0]++;
-				else if (5 <= position && position < this.numCandles.length-5) this.candlesPowered[1]++;
+				else if (5 <= position && position < this.candles[row].length-5) this.candlesPowered[1]++;
 				else this.candlesPowered[2]++;
 			}
 
@@ -309,11 +309,12 @@ class Chandelier extends THREE.Object3D {
 	update ()
 	{
 		var clockDelta = this.refClock.getDelta();
-		this.secondsElapsed += clockDelta;
 		
-		if (this.secondsElapsed >= 0.15) {
-
-			for (var i = 0; i < this.candlesPowered.length; ++i) {
+		for (var i = 0; i < this.candlesPowered.length; ++i) {
+			
+			this.secondsElapsed[i] += clockDelta;
+			
+			if (this.secondsElapsed[i] >= 0.15) {
 
 				if (this.candlesPowered[i]) {
 
@@ -323,12 +324,12 @@ class Chandelier extends THREE.Object3D {
 					var max = (this.candlesPowered[i] * 0.5) / this.numCandles[i];
 		
 					this.pointLights[i].intensity = Math.random() * (max - min) + min;
-					this.secondsElapsed = 0.0;
+					this.secondsElapsed[i] = 0.0;
 				}
 				else {
 					
 					this.pointLights[i].visible = false;
-					this.secondsElapsed = 0.0;
+					this.secondsElapsed[i] = 0.0;
 				}
 			}
 		}
@@ -486,7 +487,6 @@ class Base extends THREE.Object3D {
 
 		// Construcción del shape
 		var baseShape = new THREE.Shape ();
-		//baseShape.moveTo (-baseOptions.l-0.5, 0.0);
 		baseShape.moveTo (0.001, 0.0);
 		baseShape.lineTo (baseOptions.l+0.5, 0.0);
 		baseShape.lineTo (baseOptions.l+0.5, 0.5);
