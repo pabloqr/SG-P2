@@ -218,9 +218,9 @@ class MyScene extends THREE.Scene {
 		this.chandelier.rotation.set (0.0, Math.PI/2.0, 0.0);
 		this.chandelier.scale.set (0.15, 0.15, 0.15);
 
-		this.add (new THREE.CameraHelper (this.chandelier.pointLights[0].shadow.camera));
-		this.add (new THREE.CameraHelper (this.chandelier.pointLights[1].shadow.camera));
-		this.add (new THREE.CameraHelper (this.chandelier.pointLights[2].shadow.camera));
+		//this.add (new THREE.CameraHelper (this.chandelier.pointLights[0].shadow.camera));
+		//this.add (new THREE.CameraHelper (this.chandelier.pointLights[1].shadow.camera));
+		//this.add (new THREE.CameraHelper (this.chandelier.pointLights[2].shadow.camera));
 
 		this.chandelier.boundingBox = new THREE.Box3 ().setFromObject (this.chandelier);
 		//this.chandelier.boundingBoxHelper = new THREE.Box3Helper (this.chandelier.boundingBox, 0xffff00);
