@@ -15,6 +15,7 @@ import { ChurchBench } from './ChurchBench.js';
 import { Door } from './Door.js';
 import { Chandelier } from './Chandelier.js';
 import { Candle } from './Candle.js';
+import { DeadBody } from './DeadBody.js';
 
 /// La clase fachada del modelo
 /**dw
@@ -196,16 +197,16 @@ class MyScene extends THREE.Scene {
 		this.pickableObjects.push(this.clockModel.getHandHours());
 
 		// Creación de bancos
-		var benchScale = 0.2;
+		var benchScale = 0.18;
 		var benchSeparation = 10;
 		for(var i = 0; i < 10; i++)
 		{
 			for(var j = -1; j < 2;j+=2)
 			{
-				var bench = new ChurchBench (48, 8);
-				bench.position.set(benchSeparation*j,0,i*4.5-15);
-				bench.rotation.set(0,Math.PI,0);
-				bench.scale.set(benchScale,benchScale,benchScale);
+				var bench = new ChurchBench (52, 8);
+				bench.position.set (benchSeparation*j, 0, i*4.5-15);
+				bench.rotation.set (0, Math.PI, 0);
+				bench.scale.set (benchScale, benchScale, benchScale);
 				
 				bench.boundingBox = new THREE.Box3 ().setFromObject (bench);
 				// bench.boundingBoxHelper = new THREE.Box3Helper (bench.boundingBox, 0xffff00);
@@ -236,11 +237,16 @@ class MyScene extends THREE.Scene {
 		this.collisionBoxArray.push (this.chandelier.boundingBox);
 		this.pickableObjects.push (this.chandelier.moneyBox);
 
-		//llave
+		// Creación de la llave
 		var key = new Key();
 		key.position.set(this.clockModel.position.x,0.59,this.clockModel.position.z);
 		this.pickableObjects.push(key);
 		// key.position.set(29,0.8,1);
+
+		// Creación de la silueta del cadáver
+		var deadBody = new DeadBody ();
+		deadBody.scale.set (0.6, 0.6, 0.6);
+		deadBody.position.set (0.0, 0.0, -16.0);
 
 		this.add (church);
 		this.add (fachade);
@@ -249,6 +255,7 @@ class MyScene extends THREE.Scene {
 		this.add (key);
 		this.add (this.doorHingeLeft);
 		this.add (this.doorHingeRight);
+		this.add (deadBody);
 	}
 
 	setupKey(door)
