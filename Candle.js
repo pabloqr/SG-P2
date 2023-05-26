@@ -5,7 +5,7 @@ import { Fire} from './Fire.js'
 
 class Candle extends THREE.Object3D
 {
-	constructor ()
+	constructor (shadows)
 	{
 		super();
 		this.name = "candle";
@@ -38,8 +38,8 @@ class Candle extends THREE.Object3D
 			}
 		);
 		this. light = new THREE.PointLight(0xea7115, 0.3,0,0);
-		// light.castShadow = true;
-		var shadowRes = 32;
+		this.light.castShadow = shadows;
+		var shadowRes = 512;
 		this.light.shadow.mapSize.width = shadowRes;
 		this.light.shadow.mapSize.height = shadowRes;
 		this.light.shadow.camera.near = 0.5;
@@ -55,12 +55,33 @@ class Candle extends THREE.Object3D
 		this.add(this.light);
 	}
 
-	update()
+	update(angle)
 	{
+		if(this.scale.x<0)
+		{
+			this.fire0.rotation.y = -angle;
+			this.fire1.rotation.y = -angle;
+		}
+		else
+		{
+			this.fire0.rotation.y = angle;
+			this.fire1.rotation.y = angle;
+		}
 
-		this.fire0.rotation.y = Math.random() * (Math.PI);
-		this.fire1.rotation.y = Math.random() * (Math.PI);
-		// this.fire1.rotation.y += 0.2;
+		if(this.activeFire==false)
+		{
+			this.fire0.scale.y = 0.0;
+			this.fire1.scale.y = 0.0;
+		}
+		else
+		{
+			this.fire0.scale.y = Math.random()*0.2+1;
+			this.fire1.scale.y = Math.random()*0.2+1;
+			this.fire0.scale.x = Math.random()*0.1+1;
+			this.fire1.scale.x = Math.random()*0.1+1;
+		}
+
+
 	}
 
 	toggleFire()

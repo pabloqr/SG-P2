@@ -1,9 +1,9 @@
 // Clases de la biblioteca
 import * as THREE from './libs/three.module.js'
+import * as TWEEN from './libs/tween.esm.js'
 import { GUI } from './libs/dat.gui.module.js'
 import { Stats } from './libs/stats.module.js'
 import { Object3D } from './libs/three.module.js';
-import { Tween } from './libs/tween.esm.js';
 
 // Clases de mi proyecto
 import { Key } from './Key.js';
@@ -16,13 +16,14 @@ import { Door } from './Door.js';
 import { Chandelier } from './Chandelier.js';
 import { Candle } from './Candle.js';
 
-
 /// La clase fachada del modelo
 /**dw
  * Usaremos una clase derivada de la clase Scene de Three.js para llevar el control de la escena y de todo lo que ocurre en ella.
  */
-var doorAngle = 0;
-var clockTestHour = 0;
+// var doorAngle = 0;
+// var clockTestHour = 0;
+
+
 
 function genShadows(obj)//no se usa
 {
@@ -45,6 +46,9 @@ class MyScene extends THREE.Scene {
 	constructor (myCanvas)
 	{
 		super();
+
+		var pointShadows = false;
+		
 
 		// Estado de la escena
 		MyScene.NO_ACTION = 0 ;
@@ -95,7 +99,6 @@ class MyScene extends THREE.Scene {
 		// El modelo puede incluir su parte de la interfaz gráfica de usuario. Le pasamos la referencia a 
 		// la gui y el texto bajo el que se agruparán los controles de la interfaz que añada el modelo.
 		
-		this.elapsedSecondsCandle = 0;
 		this.candles = [];
 
 		// Creación de iglesia
@@ -128,18 +131,21 @@ class MyScene extends THREE.Scene {
 
 		
 		//Puertas
-		var doorOffset = 4;
-		var doorLeft = new Door();
-		doorLeft.position.x = -doorOffset;
+		var doorOffsetX = 8;
+		var doorOffsetZ = 0.6;
+		var doorLeft = new Door(true);
+		doorLeft.position.set(-doorOffsetX,0,doorOffsetZ);
 		this.doorHingeLeft = new THREE.Object3D();
-		this.doorHingeLeft.position.set(doorOffset,0,32.3604);
+		this.doorHingeLeft.position.set(doorOffsetX,0,35);
 		var doorRight = new Door();
 		doorRight.scale.x=-1;
-		doorRight.position.x = doorOffset;
+		doorRight.position.set(doorOffsetX,0,doorOffsetZ);
 		this.doorHingeRight = new THREE.Object3D();
-		this.doorHingeRight.position.set(-doorOffset,0,32.3604);
+		this.doorHingeRight.position.set(-doorOffsetX,0,35);
 		this.doorHingeLeft.add(doorLeft);
 		this.doorHingeRight.add(doorRight);
+		// this.doorHingeLeft.rotation.y = Math.PI/2;
+		this.setupKey(doorLeft);
 
 		// Creación de columnas y candelabros
 		var columnSeparation = 21;
@@ -167,8 +173,8 @@ class MyScene extends THREE.Scene {
 			this.collisionBoxArray.push(columna.boundingBox1);
 
 			// candles
-			var candle0 = new Candle();
-			var candle1 = new Candle();
+			var candle0 = new Candle(pointShadows);
+			var candle1 = new Candle(pointShadows);
 			candle0.position.set(0,0,i*9-15);
 			candle1.position.set(0,0,i*9-15);
 			candle1.scale.x = -1;
@@ -213,7 +219,7 @@ class MyScene extends THREE.Scene {
 		}
 
 		// Creación del lampadario
-		this.chandelier = new Chandelier (8, 4.0*Math.PI/9.0);
+		this.chandelier = new Chandelier (8, 4.0*Math.PI/9.0,pointShadows);
 		this.chandelier.position.set (-29.5, 0.0, 10.0);
 		this.chandelier.rotation.set (0.0, Math.PI/2.0, 0.0);
 		this.chandelier.scale.set (0.15, 0.15, 0.15);
@@ -243,6 +249,50 @@ class MyScene extends THREE.Scene {
 		this.add (key);
 		this.add (this.doorHingeLeft);
 		this.add (this.doorHingeRight);
+	}
+
+	setupKey(door)
+	{
+		this.doorKey = new Key();
+
+		this.doorKey.position.set(1.184,1.6,-1);
+		this.doorKey.rotation.z = -Math.PI/2;
+		door.add(this.doorKey);
+
+		this.pickableObjects.push(door.lock);
+
+
+		var origenPosicion = {p:this.doorKey.position.z}
+		var destinoPosicion = {p:0.85}
+
+		var origenRotacion = {p:this.doorKey.rotation.z}
+		var destinoRotacion = {p:0}
+
+		var origenPuerta = {p:0}
+		var destinoPuerta = {p:Math.PI/2}
+
+		this.openDoorAnim = [];
+
+		this.openDoorAnim.push(new TWEEN.Tween(origenPosicion)
+			.to(destinoPosicion, 300)
+			.easing(TWEEN.Easing.Quadratic.Out)
+			.onUpdate(() => { this.doorKey.position.z = origenPosicion.p}));
+		this.openDoorAnim.push(new TWEEN.Tween(origenRotacion)
+			.to(destinoRotacion, 300)
+			.easing(TWEEN.Easing.Quadratic.Out)
+			.onUpdate(() => { this.doorKey.rotation.z = origenRotacion.p}));
+
+		this.openDoorAnim.push(new TWEEN.Tween(origenPuerta)
+			.to(destinoPuerta, 2000)
+			.easing(TWEEN.Easing.Quadratic.InOut)
+			.onUpdate(() => { 
+				this.doorHingeLeft.rotation.y = origenPuerta.p;
+				this.doorHingeRight.rotation.y = -origenPuerta.p;
+			}));
+
+		this.openDoorAnim[0].chain(this.openDoorAnim[1]);
+		this.openDoorAnim[1].chain(this.openDoorAnim[2]);
+		
 	}
 
 	initStats()
@@ -527,6 +577,9 @@ class MyScene extends THREE.Scene {
 					case "moneyBox":
 						this.chandelier.powerRandomCandles();
 						break;
+					case "lock":
+						this.openDoorAnim[0].start();
+						break;
 				}
 			}
 			else
@@ -682,6 +735,12 @@ class MyScene extends THREE.Scene {
 		// Se actualiza el resto del modelo
 		this.chandelier.update();
 
+		this.updateClockModel();
+
+		this.candles.forEach(candle => {
+			candle.update(this.cameraObj.rotation.y);
+		});
+
 		// Le decimos al renderizador "visualiza la escena que te indico usando la cámara que te estoy pasando"
 		this.renderer.render (this, this.getCamera());
 
@@ -689,17 +748,6 @@ class MyScene extends THREE.Scene {
 		// Literalmente le decimos al navegador: "La próxima vez que haya que refrescar la pantalla, llama al método que te indico".
 		// Si no existiera esta línea,  update()  se ejecutaría solo la primera vez.
 		requestAnimationFrame(() => this.update())
-
-		this.updateClockModel();
-
-		if(this.elapsedSecondsCandle > 0.07)
-		{
-			this.candles.forEach(candle => {
-				candle.update();
-			});
-			this.elapsedSecondsCandle = 0;
-		}
-		this.elapsedSecondsCandle+=this.deltaTime
 	}
 }
 

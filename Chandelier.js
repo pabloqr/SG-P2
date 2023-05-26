@@ -6,7 +6,7 @@ import { CSG } from './libs/CSG-v2.js'
 import { Candle } from './ElectricCandle.js';
 
 class Chandelier extends THREE.Object3D {
-	constructor (chandelierRadius = 8, chandelierRotation = Math.PI/3.0)
+	constructor (chandelierRadius = 8, chandelierRotation = Math.PI/3.0,shadows = false)
 	{
 		super();
 
@@ -147,7 +147,7 @@ class Chandelier extends THREE.Object3D {
 		}
 
 		// Se crea la luz
-		this.createLights();
+		this.createLights(shadows);
 
 		this.add (chandelier);
 
@@ -215,7 +215,7 @@ class Chandelier extends THREE.Object3D {
 		}
 	}
 
-	createLights ()
+	createLights (shadows)
 	{
 		this.pointLights = [];
 
@@ -237,7 +237,7 @@ class Chandelier extends THREE.Object3D {
 			alpha += angle;
 
 			// Opciones para las sombras
-			pointLight.castShadow = true;
+			pointLight.castShadow = shadows;
 			pointLight.shadow.mapSize.width = 512;
 			pointLight.shadow.mapSize.height = 512;
 			pointLight.shadow.camera.near = 0.5;
