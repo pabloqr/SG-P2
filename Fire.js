@@ -13,11 +13,11 @@ class Fire extends THREE.Object3D
 
 		var geo = new THREE.PlaneGeometry (0.05,0.2);
 
-		var fire0 = new THREE.Mesh(geo,fireMat);
+		var fire = new THREE.Mesh(geo,fireMat);
 		// var fire1 = new THREE.Mesh(geo,fireMat);
 		// fire1.rotation.y = Math.PI/2;
 
-		this.add(fire0);
+		this.add(fire);
 		// this.add(fire1);
 	}
 }

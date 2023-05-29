@@ -16,6 +16,10 @@ import { Door } from './Door.js';
 import { Chandelier } from './Chandelier.js';
 import { Candle } from './Candle.js';
 import { DeadBody } from './DeadBody.js';
+import { SecretDoor } from './SecretDoor.js';
+import { Paper } from './Paper.js';
+import { Tree } from './Tree.js';
+import { Ground } from './Ground.js';
 
 /// La clase fachada del modelo
 /**dw
@@ -105,18 +109,26 @@ class MyScene extends THREE.Scene {
 		// Creación de iglesia
 		var church = new Church ();
 		church.bb0 = new THREE.Box3(new THREE.Vector3(-31,0,-30),new THREE.Vector3(-30,10,40));
-		church.bb1 = new THREE.Box3(new THREE.Vector3(30,0,-30),new THREE.Vector3(31,10,40));
+		// church.bb1 = new THREE.Box3(new THREE.Vector3(30,0,-30),new THREE.Vector3(31,10,40));
+		church.bb1 = new THREE.Box3(new THREE.Vector3(30,0,-30),new THREE.Vector3(31,10,-8));
 		church.bb2 = new THREE.Box3(new THREE.Vector3(-30,0,-40),new THREE.Vector3(30,10,-30));
 		church.bb3 = new THREE.Box3(new THREE.Vector3(-30,0,-30),new THREE.Vector3(30,2.75,-20.75));
 		church.bb4 = new THREE.Box3(new THREE.Vector3(-30,0,32.5),new THREE.Vector3(-8,10,35));
 		church.bb5 = new THREE.Box3(new THREE.Vector3(8,0,32.5),new THREE.Vector3(30,10,35));
 
+		church.bb6 = new THREE.Box3(new THREE.Vector3(30,0,1),new THREE.Vector3(31,10,40));
+
+		church.bb7 = new THREE.Box3(new THREE.Vector3(42,0,-8),new THREE.Vector3(43,10,1));//<---
+		church.bb8 = new THREE.Box3(new THREE.Vector3(30,0,-9),new THREE.Vector3(43,10,-8));
+		church.bb9 = new THREE.Box3(new THREE.Vector3(30,0,0),new THREE.Vector3(43,10,1));
 		// this.add(new THREE.Box3Helper(church.bb0,0xffff00));
 		// this.add(new THREE.Box3Helper(church.bb1,0xffff00));
 		// this.add(new THREE.Box3Helper(church.bb2,0xffff00));
 		// this.add(new THREE.Box3Helper(church.bb3,0xffff00));
 		// this.add(new THREE.Box3Helper(church.bb4,0xffff00));
 		// this.add(new THREE.Box3Helper(church.bb5,0xffff00));
+		// this.add(new THREE.Box3Helper(church.bb8,0xffff00));
+		// this.add(new THREE.Box3Helper(church.bb9,0xffff00));
 
 		this.collisionBoxArray.push(church.bb0);
 		this.collisionBoxArray.push(church.bb1);
@@ -125,6 +137,12 @@ class MyScene extends THREE.Scene {
 		this.collisionBoxArray.push(church.bb4);
 		this.collisionBoxArray.push(church.bb5);
 
+		this.collisionBoxArray.push(church.bb6);
+		this.collisionBoxArray.push(church.bb7);
+
+		this.collisionBoxArray.push(church.bb8);
+		this.collisionBoxArray.push(church.bb9);
+
 		// genShadows(church);
 
 		// Creación de la fachada
@@ -132,21 +150,31 @@ class MyScene extends THREE.Scene {
 
 		
 		//Puertas
-		var doorOffsetX = 8;
-		var doorOffsetZ = 0.6;
-		var doorLeft = new Door(true);
-		doorLeft.position.set(-doorOffsetX,0,doorOffsetZ);
+		this.doorOffsetX = 8.2;
+		this.doorOffsetZ = 0.3;
+		this.doorLeft = new Door(true);
+		this.doorLeft.position.set(-this.doorOffsetX,0,this.doorOffsetZ);
 		this.doorHingeLeft = new THREE.Object3D();
-		this.doorHingeLeft.position.set(doorOffsetX,0,35);
-		var doorRight = new Door();
-		doorRight.scale.x=-1;
-		doorRight.position.set(doorOffsetX,0,doorOffsetZ);
+		this.doorHingeLeft.position.set(this.doorOffsetX,0,35.3);
+		this.doorRight = new Door();
+		this.doorRight.scale.x=-1;
+		this.doorRight.position.set(this.doorOffsetX,0,this.doorOffsetZ);
 		this.doorHingeRight = new THREE.Object3D();
-		this.doorHingeRight.position.set(-doorOffsetX,0,35);
-		this.doorHingeLeft.add(doorLeft);
-		this.doorHingeRight.add(doorRight);
+		this.doorHingeRight.position.set(-this.doorOffsetX,0,35.3);
+		this.doorHingeLeft.add(this.doorLeft);
+		this.doorHingeRight.add(this.doorRight);
 		// this.doorHingeLeft.rotation.y = Math.PI/2;
-		this.setupKey(doorLeft);
+		this.setupKey(this.doorLeft);
+
+		//creacion de arboles
+		this.setupTrees();
+
+		// suelo
+		var ground = new Ground()
+		this.add(ground);
+		// ground.rotation.y = Math.PI/2;
+		ground.position.set(0,-0.5,0);
+		// ground.scale.set(3,3,3);
 
 		// Creación de columnas y candelabros
 		var columnSeparation = 21;
@@ -186,6 +214,17 @@ class MyScene extends THREE.Scene {
 			this.pickableObjects.push(candle0);
 			this.pickableObjects.push(candle1);
 		}
+
+		// Creacion de la puerta secreta
+
+		var secretDoor = new SecretDoor();
+		var wall = new SecretDoor();
+		secretDoor.position.set(31,0,-7);
+		wall.position.set(-31,0,-7);
+		this.add(secretDoor);
+		this.add(wall);
+
+		this.setupSecretDoor(secretDoor);
 
 		// Creación del reloj (modelo jerárquico)
 		this.clockModel = new Clock ();
@@ -248,6 +287,11 @@ class MyScene extends THREE.Scene {
 		deadBody.scale.set (0.6, 0.6, 0.6);
 		deadBody.position.set (0.0, 0.0, -16.0);
 
+		// Creacion del dibujo
+		var drawing = new Paper();
+		drawing.position.set(4,0.001,-15);
+		drawing.rotation.y = 1;
+
 		this.add (church);
 		this.add (fachade);
 		this.add (this.clockModel);
@@ -256,13 +300,64 @@ class MyScene extends THREE.Scene {
 		this.add (this.doorHingeLeft);
 		this.add (this.doorHingeRight);
 		this.add (deadBody);
+		this.add (drawing);
+	}
+
+	setBG()
+	{
+		const loader = new THREE.CubeTextureLoader();
+		const texture = loader.load([
+		  './imgs/skyRight.png',
+		  './imgs/skyLeft.png',
+		  './imgs/skyUp.png',
+		  './imgs/skyDown.png',
+		  './imgs/skyFront.png',
+		  './imgs/skyBack.png',
+		]);
+		this.background = texture;
+
+		const color = 0x50505;
+		const near = 5;
+		const far = 100;
+		this.fog = new THREE.Fog(color, near, far);
+		const density = 0.1;
+		// this.fog = new THREE.FogExp2(texture, density);
+	}
+
+	setupSecretDoor(secretDoor)
+	{
+		this.secretDoorActivated = false;
+
+		var bb = new THREE.Box3(new THREE.Vector3(30,0,-8),new THREE.Vector3(30,10,1));
+		this.collisionBoxArray.push(bb);
+
+		var origenPosicionX = {p:secretDoor.position.x}
+		var destinoPosicionX = {p:secretDoor.position.x+0.5}
+
+		var origenPosicionZ = {p:secretDoor.position.z}
+		var destinoPosicionZ = {p:secretDoor.position.z-8}
+
+		this.secretDoorAnim = [];
+		this.secretDoorAnim.push(new TWEEN.Tween(origenPosicionX).to(destinoPosicionX, 800)
+		.easing(TWEEN.Easing.Quadratic.Out)
+		.onUpdate(() => { secretDoor.position.x = origenPosicionX.p}));
+
+		this.secretDoorAnim.push(new TWEEN.Tween(origenPosicionZ).to(destinoPosicionZ, 4000)
+		.easing(TWEEN.Easing.Quadratic.Out)
+		.onUpdate(() => { secretDoor.position.z = origenPosicionZ.p})
+		.onComplete(() => {
+			bb.min = new THREE.Vector3(0,0,0);
+			bb.max = new THREE.Vector3(0,0,0);
+		}));
+
+		this.secretDoorAnim[0].chain(this.secretDoorAnim[1]);
 	}
 
 	setupKey(door)
 	{
 		this.doorKey = new Key();
 
-		this.doorKey.position.set(1.184,1.6,-1);
+		this.doorKey.position.set(1.184,-10,this.doorKey.rotation.z-1);
 		this.doorKey.rotation.z = -Math.PI/2;
 		door.add(this.doorKey);
 
@@ -270,7 +365,7 @@ class MyScene extends THREE.Scene {
 
 
 		var origenPosicion = {p:this.doorKey.position.z}
-		var destinoPosicion = {p:0.85}
+		var destinoPosicion = {p:door.lock.position.z-0.5}
 
 		var origenRotacion = {p:this.doorKey.rotation.z}
 		var destinoRotacion = {p:0}
@@ -300,6 +395,31 @@ class MyScene extends THREE.Scene {
 		this.openDoorAnim[0].chain(this.openDoorAnim[1]);
 		this.openDoorAnim[1].chain(this.openDoorAnim[2]);
 		
+	}
+
+	setupTrees()
+	{
+		var trees = [];
+		trees.push({x:10,z:40,r:1});
+		trees.push({x:-10,z:55,r:2});
+		trees.push({x:15,z:50,r:3});
+		trees.push({x:20,z:60,r:4});
+		trees.push({x:-13,z:56,r:5});
+		trees.push({x:3,z:70,r:6});
+		trees.push({x:-18,z:65,r:7});
+		trees.push({x:25,z:67,r:8});
+		trees.push({x:-22,z:60,r:9});
+		trees.push({x:-3,z:71,r:10});
+		trees.push({x:-10,z:58,r:11});
+
+		for(var i = 0; i < trees.length; i++)
+		{
+			var tree = new Tree();
+			tree.position.set(trees[i].x,0,trees[i].z);
+			tree.rotation.y = trees[i].r;
+			tree.scale.set(2,2,2);
+			this.add(tree);
+		}
 	}
 
 	initStats()
@@ -381,7 +501,10 @@ class MyScene extends THREE.Scene {
 		this.guiControls = {
 			// En el contexto de una función   this   alude a la función
 			lightIntensity : 0.5,
-			axisOnOff : true
+			axisOnOff : true,
+			// doorX : 0,
+			// doorZ : 0,
+
 		}
 
 		// Se crea una sección para los controles de esta clase
@@ -397,8 +520,34 @@ class MyScene extends THREE.Scene {
 		.name ('Mostrar ejes : ')
 		.onChange ( (value) => this.setAxisVisible (value) );
 
+		// folder.add (this.guiControls, 'doorX', -10, 10, 0.1)
+		// .name ('offsetX : ')
+		// .onChange ( (value) => this.setDoorOffsetX (value) );
+
+		// folder.add (this.guiControls, 'doorZ', -10, 10, 0.1)
+		// .name ('offsetZ : ')
+		// .onChange ( (value) => this.setDoorOffsetZ (value) );
+
 		return gui;
 	}
+
+	// setDoorOffsetX(value)
+	// {
+	// 	this.doorOffsetX = value;
+	// 	this.doorHingeRight.position.set(-this.doorOffsetX,0,35);
+	// 	this.doorHingeLeft.position.set(this.doorOffsetX,0,35);
+	// 	this.doorRight.position.set(this.doorOffsetX,0,this.doorOffsetZ);
+	// 	this.doorLeft.position.set(-this.doorOffsetX,0,this.doorOffsetZ);
+	// }
+
+	// setDoorOffsetZ(value)
+	// {
+	// 	this.doorOffsetZ = value;
+	// 	this.doorHingeRight.position.set(-this.doorOffsetX,0,35);
+	// 	this.doorHingeLeft.position.set(this.doorOffsetX,0,35);
+	// 	this.doorRight.position.set(this.doorOffsetX,0,this.doorOffsetZ);
+	// 	this.doorLeft.position.set(-this.doorOffsetX,0,this.doorOffsetZ);
+	// }
 
 	createLights () {
 		// Se crea una luz ambiental, evita que se vean complentamente negras las zonas donde no incide de manera directa una fuente de luz
@@ -409,7 +558,7 @@ class MyScene extends THREE.Scene {
 		dirLightTarget.position.set(0,15,0);
 		var ambientLight = new THREE.AmbientLight(0xccddee, 0.6);
 		var directionLight = new THREE.DirectionalLight(0xc9fcf9,0.9);
-		directionLight.position.set(-50,65,100);
+		directionLight.position.set(20,65,100);
 		directionLight.target = dirLightTarget;
 
 		var shadowRes = 2048;
@@ -580,12 +729,47 @@ class MyScene extends THREE.Scene {
 						break;
 					case "candle":
 						selectedObject.toggleFire();
+
+						var valid = true;
+
+						//	26	21
+						this.binaryPuzzle = [
+							false,true,
+							true,false,
+							false,true,
+							true,false,
+							true,true
+						];
+
+						if(this.secretDoorActivated==false)
+						{
+							for(var i = 0; i < this.candles.length;i++)
+							{
+								if(this.candles[i].activeFire != this.binaryPuzzle[i])
+								{
+									valid = false;
+								}
+							}
+	
+							if(valid==true)
+							{
+								this.secretDoorActivated = true;
+								this.secretDoorAnim[0].start();
+							}
+						}
+
 						break;
 					case "moneyBox":
 						this.chandelier.powerRandomCandles();
 						break;
 					case "lock":
-						this.openDoorAnim[0].start();
+						if(this.hasKey)
+						{
+							this.doorKey.position.y = 1.6;
+							this.openDoorAnim[0].start();
+							this.hasKey = false;
+						}
+						
 						break;
 				}
 			}
@@ -742,6 +926,8 @@ class MyScene extends THREE.Scene {
 		// Se actualiza el resto del modelo
 		this.chandelier.update();
 
+		// this.doorHingeLeft.rotateY(0.02);
+
 		this.updateClockModel();
 
 		this.candles.forEach(candle => {
@@ -778,4 +964,6 @@ $(function () {
 
 	// Que no se nos olvide, la primera visualización.
 	scene.update();
+
+	scene.setBG();
 });

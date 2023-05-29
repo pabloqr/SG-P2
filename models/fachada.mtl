@@ -1,12 +1,26 @@
 # Blender MTL File: 'churchFull.blend'
-# Material Count: 1
+# Material Count: 2
 
-newmtl None
-Ns 500.000001
+newmtl roof
+Ns 225.000000
 Ka 1.000000 1.000000 1.000000
 Kd 0.800000 0.800000 0.800000
-Ks 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
 Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
+map_Bump ../imgs/Roof_Tiles_Stone_001_height.png
+map_Kd ../imgs/Roof_Tiles_Stone_001_basecolor.jpg
+
+newmtl stoneMaterial
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.224409 0.224409 0.224409
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Bump -s 20.050000 20.050000 20.050000 ../imgs/Wall_Stone_023_Normal.jpg
+map_Kd -o 1.900000 0.000000 0.000000 -s 20.050000 20.050000 20.050000 ../imgs/Wall_Stone_023_BaseColor.jpg
