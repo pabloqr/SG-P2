@@ -62,6 +62,8 @@ class MyScene extends THREE.Scene {
 
 		this.sceneState = MyScene.NO_ACTION;
 		this.hasKey = false;
+		this.closedExit = false;
+		this.soundCreated = false;
 
 		// Lo primero, crear el visualizador, pasándole el lienzo sobre el que realizar los renderizados.
 		this.renderer = this.createRenderer(myCanvas);
@@ -108,27 +110,21 @@ class MyScene extends THREE.Scene {
 
 		// Creación de iglesia
 		var church = new Church ();
-		church.bb0 = new THREE.Box3(new THREE.Vector3(-31,0,-30),new THREE.Vector3(-30,10,40));
-		// church.bb1 = new THREE.Box3(new THREE.Vector3(30,0,-30),new THREE.Vector3(31,10,40));
+		church.bb0 = new THREE.Box3(new THREE.Vector3(-31,0,-30),new THREE.Vector3(-30,10,120));//pared izquierda
 		church.bb1 = new THREE.Box3(new THREE.Vector3(30,0,-30),new THREE.Vector3(31,10,-8));
 		church.bb2 = new THREE.Box3(new THREE.Vector3(-30,0,-40),new THREE.Vector3(30,10,-30));
 		church.bb3 = new THREE.Box3(new THREE.Vector3(-30,0,-30),new THREE.Vector3(30,2.75,-20.75));
 		church.bb4 = new THREE.Box3(new THREE.Vector3(-30,0,32.5),new THREE.Vector3(-8,10,35));
 		church.bb5 = new THREE.Box3(new THREE.Vector3(8,0,32.5),new THREE.Vector3(30,10,35));
 
-		church.bb6 = new THREE.Box3(new THREE.Vector3(30,0,1),new THREE.Vector3(31,10,40));
+		church.bb6 = new THREE.Box3(new THREE.Vector3(30,0,1),new THREE.Vector3(31,10,120));//pared derecha (exterior) 
 
-		church.bb7 = new THREE.Box3(new THREE.Vector3(42,0,-8),new THREE.Vector3(43,10,1));//<---
+		church.bb7 = new THREE.Box3(new THREE.Vector3(42,0,-8),new THREE.Vector3(43,10,1));
 		church.bb8 = new THREE.Box3(new THREE.Vector3(30,0,-9),new THREE.Vector3(43,10,-8));
 		church.bb9 = new THREE.Box3(new THREE.Vector3(30,0,0),new THREE.Vector3(43,10,1));
-		// this.add(new THREE.Box3Helper(church.bb0,0xffff00));
-		// this.add(new THREE.Box3Helper(church.bb1,0xffff00));
-		// this.add(new THREE.Box3Helper(church.bb2,0xffff00));
-		// this.add(new THREE.Box3Helper(church.bb3,0xffff00));
-		// this.add(new THREE.Box3Helper(church.bb4,0xffff00));
-		// this.add(new THREE.Box3Helper(church.bb5,0xffff00));
-		// this.add(new THREE.Box3Helper(church.bb8,0xffff00));
-		// this.add(new THREE.Box3Helper(church.bb9,0xffff00));
+
+		church.bb10 = new THREE.Box3(new THREE.Vector3(-30,0,120),new THREE.Vector3(31,10,121));//fondo exterior
+
 
 		this.collisionBoxArray.push(church.bb0);
 		this.collisionBoxArray.push(church.bb1);
@@ -142,6 +138,7 @@ class MyScene extends THREE.Scene {
 
 		this.collisionBoxArray.push(church.bb8);
 		this.collisionBoxArray.push(church.bb9);
+		this.collisionBoxArray.push(church.bb10);
 
 		// genShadows(church);
 
@@ -156,11 +153,13 @@ class MyScene extends THREE.Scene {
 		this.doorLeft.position.set(-this.doorOffsetX,0,this.doorOffsetZ);
 		this.doorHingeLeft = new THREE.Object3D();
 		this.doorHingeLeft.position.set(this.doorOffsetX,0,35.3);
+		this.doorHingeLeft.rotation.y = Math.PI/4;
 		this.doorRight = new Door();
 		this.doorRight.scale.x=-1;
 		this.doorRight.position.set(this.doorOffsetX,0,this.doorOffsetZ);
 		this.doorHingeRight = new THREE.Object3D();
 		this.doorHingeRight.position.set(-this.doorOffsetX,0,35.3);
+		this.doorHingeRight.rotation.y = -Math.PI/4;
 		this.doorHingeLeft.add(this.doorLeft);
 		this.doorHingeRight.add(this.doorRight);
 		// this.doorHingeLeft.rotation.y = Math.PI/2;
@@ -355,6 +354,8 @@ class MyScene extends THREE.Scene {
 
 	setupKey(door)
 	{
+		this.exitBB = new THREE.Box3(new THREE.Vector3(-8,0,35),new THREE.Vector3(8,10,40));
+
 		this.doorKey = new Key();
 
 		this.doorKey.position.set(1.184,-10,this.doorKey.rotation.z-1);
@@ -390,27 +391,57 @@ class MyScene extends THREE.Scene {
 			.onUpdate(() => { 
 				this.doorHingeLeft.rotation.y = origenPuerta.p;
 				this.doorHingeRight.rotation.y = -origenPuerta.p;
+			})
+			.onComplete(()=>{
+				this.exitBB.max = new THREE.Vector3(0,0,0);
+				this.exitBB.min = new THREE.Vector3(0,0,0);
 			}));
 
 		this.openDoorAnim[0].chain(this.openDoorAnim[1]);
 		this.openDoorAnim[1].chain(this.openDoorAnim[2]);
+
+		var origenPuertaCerrar = {p:Math.PI/4}
+		var destinoPuertaCerrar = {p:0}
+
+		this.closeDoorAnim = [];
+
+		this.closeDoorAnim.push(new TWEEN.Tween(origenPuertaCerrar)
+		.to(destinoPuertaCerrar, 800)
+		.easing(TWEEN.Easing.Quadratic.In)
+		.onUpdate(() => { 
+			this.doorHingeLeft.rotation.y = origenPuertaCerrar.p;
+			this.doorHingeRight.rotation.y = -origenPuertaCerrar.p;
+		})
+		.onComplete(()=>{
+			const soundEvent = this.soundEvent;
+			const audioLoader = new THREE.AudioLoader();
+			audioLoader.load( 'sfx/closeDoor.ogg', function( buffer ) {
+				soundEvent.setBuffer( buffer );
+				soundEvent.setVolume( 1 );
+				soundEvent.play();
+			});
+
+			this.soundAmbient.setVolume( 0.02 );
+		}));
 		
 	}
 
 	setupTrees()
 	{
 		var trees = [];
-		trees.push({x:10,z:40,r:1});
-		trees.push({x:-10,z:55,r:2});
+		trees.push({x:17,z:40,r:1});
+		trees.push({x:-24,z:55,r:2});
 		trees.push({x:15,z:50,r:3});
 		trees.push({x:20,z:60,r:4});
 		trees.push({x:-13,z:56,r:5});
-		trees.push({x:3,z:70,r:6});
+		trees.push({x:13,z:70,r:6});
 		trees.push({x:-18,z:65,r:7});
 		trees.push({x:25,z:67,r:8});
 		trees.push({x:-22,z:60,r:9});
 		trees.push({x:-3,z:71,r:10});
-		trees.push({x:-10,z:58,r:11});
+		trees.push({x:-10,z:64,r:11});
+
+		var treeSize = 1.5;
 
 		for(var i = 0; i < trees.length; i++)
 		{
@@ -418,6 +449,8 @@ class MyScene extends THREE.Scene {
 			tree.position.set(trees[i].x,0,trees[i].z);
 			tree.rotation.y = trees[i].r;
 			tree.scale.set(2,2,2);
+			tree.bb = new THREE.Box2(new THREE.Vector3(-treeSize+tree.position.x,0,-treeSize+tree.position.z),new THREE.Vector3(treeSize+tree.position.x,10,treeSize+tree.position.z));
+			this.collisionBoxArray.push(tree.bb);
 			this.add(tree);
 		}
 	}
@@ -444,8 +477,6 @@ class MyScene extends THREE.Scene {
 		//   La razón de aspecto ancho/alto
 		//   Los planos de recorte cercano y lejano
 		this.camera = new THREE.PerspectiveCamera (45, window.innerWidth / window.innerHeight, 0.1, 1000);
-		// También se indica dónde se coloca
-		// Y hacia dónde mira
 		this.cameraObj = new THREE.Object3D ();
 		this.cameraObj.position.set (0, 2, 0);
 		this.cameraObj.add (this.camera);
@@ -457,16 +488,21 @@ class MyScene extends THREE.Scene {
 			right: 0, left: 0, front: 0, back: 0
 		};
 
+		this.bgMat = new THREE.MeshBasicMaterial({color : 0x000000 ,transparent:true,opacity:0});
+
+		var cameraBG = new THREE.Mesh(new THREE.BoxGeometry(10,1,10),this.bgMat);
+		cameraBG.position.z = -1;
+		cameraBG.rotation.x = Math.PI/2;
+		this.camera.add(cameraBG);
 
 		//Creamos jugador
 		this.jugador = new THREE.Object3D ();
+		this.jugador.position.z = 90;
 		const min = new THREE.Vector3(-0.5, 0, -0.5);
 		const max = new THREE.Vector3(0.5, 2.5, 0.5);
 		this.jugador.add(this.cameraObj);
 
 		this.jugador.boundingBox = new THREE.Box3 (min,max);
-		// this.jugador.boundingBoxHelper = new THREE.Box3Helper (this.jugador.boundingBox, 0xffff00);
-		// this.add (this.jugador.boundingBoxHelper);
 		this.add (this.jugador);
 	}
 
@@ -502,9 +538,6 @@ class MyScene extends THREE.Scene {
 			// En el contexto de una función   this   alude a la función
 			lightIntensity : 0.5,
 			axisOnOff : true,
-			// doorX : 0,
-			// doorZ : 0,
-
 		}
 
 		// Se crea una sección para los controles de esta clase
@@ -520,34 +553,8 @@ class MyScene extends THREE.Scene {
 		.name ('Mostrar ejes : ')
 		.onChange ( (value) => this.setAxisVisible (value) );
 
-		// folder.add (this.guiControls, 'doorX', -10, 10, 0.1)
-		// .name ('offsetX : ')
-		// .onChange ( (value) => this.setDoorOffsetX (value) );
-
-		// folder.add (this.guiControls, 'doorZ', -10, 10, 0.1)
-		// .name ('offsetZ : ')
-		// .onChange ( (value) => this.setDoorOffsetZ (value) );
-
 		return gui;
 	}
-
-	// setDoorOffsetX(value)
-	// {
-	// 	this.doorOffsetX = value;
-	// 	this.doorHingeRight.position.set(-this.doorOffsetX,0,35);
-	// 	this.doorHingeLeft.position.set(this.doorOffsetX,0,35);
-	// 	this.doorRight.position.set(this.doorOffsetX,0,this.doorOffsetZ);
-	// 	this.doorLeft.position.set(-this.doorOffsetX,0,this.doorOffsetZ);
-	// }
-
-	// setDoorOffsetZ(value)
-	// {
-	// 	this.doorOffsetZ = value;
-	// 	this.doorHingeRight.position.set(-this.doorOffsetX,0,35);
-	// 	this.doorHingeLeft.position.set(this.doorOffsetX,0,35);
-	// 	this.doorRight.position.set(this.doorOffsetX,0,this.doorOffsetZ);
-	// 	this.doorLeft.position.set(-this.doorOffsetX,0,this.doorOffsetZ);
-	// }
 
 	createLights () {
 		// Se crea una luz ambiental, evita que se vean complentamente negras las zonas donde no incide de manera directa una fuente de luz
@@ -588,9 +595,6 @@ class MyScene extends THREE.Scene {
 		// En este caso se declara como   this.atributo   para que sea un atributo accesible desde otros métodos.
 		this.spotLight = new THREE.SpotLight( 0xffffff, this.guiControls.lightIntensity );
 		this.spotLight.position.set( 0, 1, 0 );
-		// this.add (this.spotLight);
-
-		// this.add(new THREE.CameraHelper(directionLight.shadow.camera));
 	}
 
 	setLightIntensity (valor) {
@@ -755,6 +759,15 @@ class MyScene extends THREE.Scene {
 							{
 								this.secretDoorActivated = true;
 								this.secretDoorAnim[0].start();
+
+								const soundEvent = this.soundEvent;
+								const audioLoader = new THREE.AudioLoader();
+								audioLoader.load( 'sfx/secretDoor.ogg', function( buffer ) {
+									soundEvent.setBuffer( buffer );
+									soundEvent.setVolume( 1 );
+									soundEvent.play();
+								});
+					
 							}
 						}
 
@@ -794,6 +807,28 @@ class MyScene extends THREE.Scene {
 				case 'S': this.cameraMovement.back = 1; break;
 				case 'D': this.cameraMovement.right = 1; break;
 			}
+		}
+
+		if(this.soundCreated==false)
+		{
+			this.soundCreated = true;
+
+			const listener = new THREE.AudioListener();
+			this.camera.add( listener );
+			// create a global audio source
+			
+			this.soundEvent = new THREE.Audio( listener );
+			this.soundAmbient = new THREE.Audio( listener );
+
+			const soundAmbient = this.soundAmbient;
+			// load a sound and set it as the Audio object's buffer
+			const audioLoader = new THREE.AudioLoader();
+			audioLoader.load( 'sfx/ambient.ogg', function( buffer ) {
+				soundAmbient.setBuffer( buffer );
+				soundAmbient.setLoop( true );
+				soundAmbient.setVolume( 0.3 );
+				soundAmbient.play();
+			});
 		}
 	}
 
@@ -941,6 +976,20 @@ class MyScene extends THREE.Scene {
 		// Literalmente le decimos al navegador: "La próxima vez que haya que refrescar la pantalla, llama al método que te indico".
 		// Si no existiera esta línea,  update()  se ejecutaría solo la primera vez.
 		requestAnimationFrame(() => this.update())
+
+		//cerrar la puerta cuando se entre a la iglesia por primera vez
+		if(this.jugador.position.z < 30 && this.closedExit == false)
+		{	
+			this.closeDoorAnim[0].start();
+			this.closedExit = true;
+			this.collisionBoxArray.push(this.exitBB);
+		}
+
+		//finalizar el juego cuando se salga de la iglesia
+		if(this.jugador.position.z>40 && this.closedExit == true)
+		{
+			this.bgMat.opacity+=this.deltaTime*0.5;
+		}
 	}
 }
 
