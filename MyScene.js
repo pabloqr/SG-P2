@@ -39,9 +39,10 @@ class MyScene extends THREE.Scene {
 		MyScene.PICKING_MINUTES = 1;
 		MyScene.PICKING_HOURS = 2;
 		MyScene.INSERTING_COINS = 3;
-		MyScene.CORRECT_COINS = 6;
 
 		this.sceneState = MyScene.NO_ACTION;
+		this.hasCoins = false;
+		this.CORRECT_COINS = 6;
 		this.hasKey = false;
 		this.closedExit = false;
 
@@ -195,12 +196,17 @@ class MyScene extends THREE.Scene {
 		}
 
 		// Creacion de la mesa
-		var table = new Table();
-		table.scale.set(0.6,0.6,0.6);
-		table.position.set(38,0,-2);
+		this.table = new Table();
+		this.table.scale.set(0.6,0.6,0.6);
+		this.table.position.set(38,0,-2);
 
-		table.bb = new THREE.Box3(new THREE.Vector3(-0.3+table.position.x,0,-0.3+table.position.z),new THREE.Vector3(0.3+table.position.x,0.6,0.3+table.position.z));
-		this.collisionBoxArray.push(table.bb);
+		this.table.bb = new THREE.Box3 (
+			new THREE.Vector3 (-0.3+this.table.position.x, 0, -0.3+this.table.position.z),
+			new THREE.Vector3 (0.3+this.table.position.x, 0.6, 0.3+this.table.position.z)
+		);
+		this.collisionBoxArray.push (this.table.bb);
+
+		this.pickableObjects.push (this.table.coins);
 
 		// Creacion del cuadro
 		var painting = new Painting();
@@ -296,7 +302,7 @@ class MyScene extends THREE.Scene {
 		this.add (this.doorHingeRight);
 		this.add (deadBody);
 		this.add (drawing);
-		this.add (table);
+		this.add (this.table);
 		this.add (painting);
 	}
 
@@ -759,7 +765,7 @@ class MyScene extends THREE.Scene {
 							}
 							break;
 					case "moneyBox":
-						if (this.sceneState != MyScene.INSERTING_COINS) {
+						if (this.sceneState != MyScene.INSERTING_COINS && this.hasCoins) {
 
 							this.sceneState = MyScene.INSERTING_COINS;
 							
@@ -779,7 +785,7 @@ class MyScene extends THREE.Scene {
 
 							if (this.numCoins > 0) this.numCoins--;
 
-							if (this.numCoins == MyScene.CORRECT_COINS) this.chandelier.powerSolutionCandles();
+							if (this.numCoins == this.CORRECT_COINS) this.chandelier.powerSolutionCandles();
 							else this.chandelier.powerRandomCandles();
 						}
 						break;
@@ -788,9 +794,13 @@ class MyScene extends THREE.Scene {
 
 							this.numCoins++;
 
-							if (this.numCoins == MyScene.CORRECT_COINS) this.chandelier.powerSolutionCandles();
+							if (this.numCoins == this.CORRECT_COINS) this.chandelier.powerSolutionCandles();
 							else this.chandelier.powerRandomCandles();
 						}
+						break;
+					case "coins":
+						if (!this.hasCoins) this.table.coins.visible = false;
+						this.hasCoins = true;
 						break;
 				}
 			}
