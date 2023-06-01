@@ -19,6 +19,7 @@ import { Paper } from './Paper.js';
 import { Tree } from './Tree.js';
 import { Ground } from './Ground.js';
 import { Selector } from './Selector.js';
+import { Table } from './Table.js';
 
 /// La clase fachada del modelo
 /**dw
@@ -192,6 +193,14 @@ class MyScene extends THREE.Scene {
 			this.pickableObjects.push(candle1);
 		}
 
+		// Creacion de la mesa
+		var table = new Table();
+		table.scale.set(0.6,0.6,0.6);
+		table.position.set(38,0,-2);
+
+		table.bb = new THREE.Box3(new THREE.Vector3(-0.3+table.position.x,0,-0.3+table.position.z),new THREE.Vector3(0.3+table.position.x,0.6,0.3+table.position.z));
+		this.collisionBoxArray.push(table.bb);
+
 		// Creacion de la puerta secreta
 
 		var secretDoor = new SecretDoor();
@@ -281,6 +290,7 @@ class MyScene extends THREE.Scene {
 		this.add (this.doorHingeRight);
 		this.add (deadBody);
 		this.add (drawing);
+		this.add (table);
 	}
 
 	setBG()
