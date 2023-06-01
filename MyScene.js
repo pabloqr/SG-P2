@@ -20,6 +20,7 @@ import { Tree } from './Tree.js';
 import { Ground } from './Ground.js';
 import { Selector } from './Selector.js';
 import { Table } from './Table.js';
+import { Painting } from './Painting.js';
 
 /// La clase fachada del modelo
 /**dw
@@ -201,6 +202,11 @@ class MyScene extends THREE.Scene {
 		table.bb = new THREE.Box3(new THREE.Vector3(-0.3+table.position.x,0,-0.3+table.position.z),new THREE.Vector3(0.3+table.position.x,0.6,0.3+table.position.z));
 		this.collisionBoxArray.push(table.bb);
 
+		// Creacion del cuadro
+		var painting = new Painting();
+		painting.position.set(-29.5,4,-5);
+		painting.rotation.set(0,Math.PI/2,0);
+
 		// Creacion de la puerta secreta
 
 		var secretDoor = new SecretDoor();
@@ -291,6 +297,7 @@ class MyScene extends THREE.Scene {
 		this.add (deadBody);
 		this.add (drawing);
 		this.add (table);
+		this.add (painting);
 	}
 
 	setBG()
