@@ -25,25 +25,6 @@ import { Selector } from './Selector.js';
 /**dw
  * Usaremos una clase derivada de la clase Scene de Three.js para llevar el control de la escena y de todo lo que ocurre en ella.
  */
-// var doorAngle = 0;
-// var clockTestHour = 0;
-
-function genShadows(obj)//no se usa
-{
-	obj.receiveShadow = true;
-	obj.traverseVisible((node)=>{
-		if ( node instanceof THREE.Mesh ) 
-		{ 
-			node.castShadow = true; 
-			node.receiveShadow = true;
-		} 
-	});
-}
-
-function angleFromVector(v0,v1)//no se usa(entre 0 y 180)
-{
-	return Math.acos( (v0.x * v1.x + v0.y * v1.y) / (Math.sqrt(Math.pow(v0.x,2)+Math.pow(v0.x,2)) * Math.sqrt(Math.pow(v1.x,2)+Math.pow(v1.y,2))) );
-}
 
 class MyScene extends THREE.Scene {
 	constructor (myCanvas)
@@ -62,6 +43,8 @@ class MyScene extends THREE.Scene {
 		this.sceneState = MyScene.NO_ACTION;
 		this.hasKey = false;
 		this.closedExit = false;
+
+		//controla que se hayan creado el audio listener y los audio sources
 		this.soundCreated = false;
 
 		// Lo primero, crear el visualizador, pasándole el lienzo sobre el que realizar los renderizados.
@@ -846,6 +829,8 @@ class MyScene extends THREE.Scene {
 			{
 				this.sceneState = MyScene.NO_ACTION;
 				this.cameraRotation = false;
+				this.minusSelector.visible = false;
+				this.plusSelector.visible = false;
 			}
 		}
 	}
