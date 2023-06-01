@@ -8,8 +8,10 @@ class Candle extends THREE.Object3D {
 		super();
 
 		// Opciones de la llama
+		this.onMaterial = new THREE.MeshLambertMaterial ({ color : 0xfaefd4, emissive : 0xffe44a, emissiveIntensity : 1 });
+		this.solutionMaterial = new THREE.MeshLambertMaterial ({ color : 0x000000, emissive : 0x450000, emissiveIntensity : 1 });
 		this.flameOffMaterial = new THREE.MeshLambertMaterial ({ color : 0xa39a83 });
-		this.flameOnMaterial = new THREE.MeshLambertMaterial ({ color : 0xfaefd4, emissive : 0xffe44a, emissiveIntensity : 1 });
+		this.flameOnMaterial = this.onMaterial;
 		this.candlePower = powerOn;
 
 		// Propiedades de la vela

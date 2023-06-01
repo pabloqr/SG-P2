@@ -3,7 +3,6 @@ import * as THREE from './libs/three.module.js'
 import * as TWEEN from './libs/tween.esm.js'
 import { GUI } from './libs/dat.gui.module.js'
 import { Stats } from './libs/stats.module.js'
-import { Object3D } from './libs/three.module.js';
 
 // Clases de mi proyecto
 import { Key } from './Key.js';
@@ -20,6 +19,7 @@ import { SecretDoor } from './SecretDoor.js';
 import { Paper } from './Paper.js';
 import { Tree } from './Tree.js';
 import { Ground } from './Ground.js';
+import { Selector } from './Selector.js';
 
 /// La clase fachada del modelo
 /**dw
@@ -27,8 +27,6 @@ import { Ground } from './Ground.js';
  */
 // var doorAngle = 0;
 // var clockTestHour = 0;
-
-
 
 function genShadows(obj)//no se usa
 {
@@ -53,12 +51,13 @@ class MyScene extends THREE.Scene {
 		super();
 
 		var pointShadows = false;
-		
 
 		// Estado de la escena
 		MyScene.NO_ACTION = 0 ;
 		MyScene.PICKING_MINUTES = 1;
 		MyScene.PICKING_HOURS = 2;
+		MyScene.INSERTING_COINS = 3;
+		MyScene.CORRECT_COINS = 6;
 
 		this.sceneState = MyScene.NO_ACTION;
 		this.hasKey = false;
@@ -95,6 +94,12 @@ class MyScene extends THREE.Scene {
 		// Array de objetos pickables
 		this.pickableObjects = [];
 
+		// Array de candelabros
+		this.candles = [];
+
+		// Número de monedas insertadas
+		this.numCoins = 0;
+
 		// Creamos reloj de actualizaciones
 		this.clock = new THREE.Clock();
 
@@ -103,12 +108,8 @@ class MyScene extends THREE.Scene {
 		// this.add (this.axis);
 
 		// Por último creamos el modelo.
-		// El modelo puede incluir su parte de la interfaz gráfica de usuario. Le pasamos la referencia a 
-		// la gui y el texto bajo el que se agruparán los controles de la interfaz que añada el modelo.
 		
-		this.candles = [];
-
-		// Creación de iglesia
+		// Creación de la iglesia
 		var church = new Church ();
 		church.bb0 = new THREE.Box3(new THREE.Vector3(-31,0,-30),new THREE.Vector3(-30,10,120));//pared izquierda
 		church.bb1 = new THREE.Box3(new THREE.Vector3(30,0,-30),new THREE.Vector3(31,10,-8));
@@ -124,7 +125,6 @@ class MyScene extends THREE.Scene {
 		church.bb9 = new THREE.Box3(new THREE.Vector3(30,0,0),new THREE.Vector3(43,10,1));
 
 		church.bb10 = new THREE.Box3(new THREE.Vector3(-30,0,120),new THREE.Vector3(31,10,121));//fondo exterior
-
 
 		this.collisionBoxArray.push(church.bb0);
 		this.collisionBoxArray.push(church.bb1);
@@ -145,8 +145,7 @@ class MyScene extends THREE.Scene {
 		// Creación de la fachada
 		var fachade = new Fachade ();
 
-		
-		//Puertas
+		// Creación de las puertas
 		this.doorOffsetX = 8.2;
 		this.doorOffsetZ = 0.3;
 		this.doorLeft = new Door(true);
@@ -165,10 +164,10 @@ class MyScene extends THREE.Scene {
 		// this.doorHingeLeft.rotation.y = Math.PI/2;
 		this.setupKey(this.doorLeft);
 
-		//creacion de arboles
+		// Creación de árboles
 		this.setupTrees();
 
-		// suelo
+		// Creación del suelo
 		var ground = new Ground()
 		this.add(ground);
 		// ground.rotation.y = Math.PI/2;
@@ -290,6 +289,9 @@ class MyScene extends THREE.Scene {
 		var drawing = new Paper();
 		drawing.position.set(4,0.001,-15);
 		drawing.rotation.y = 1;
+		
+		this.pickableObjects.push (this.minusSelector);
+		this.pickableObjects.push (this.plusSelector);
 
 		this.add (church);
 		this.add (fachade);
@@ -493,6 +495,22 @@ class MyScene extends THREE.Scene {
 		var cameraBG = new THREE.Mesh(new THREE.BoxGeometry(10,1,10),this.bgMat);
 		cameraBG.position.z = -1;
 		cameraBG.rotation.x = Math.PI/2;
+		
+		this.minusSelector = new Selector ("minus", "imgs/Minus_Alpha.png");
+		this.minusSelector.scale.set (0.05, 0.05, 0.05);
+		this.minusSelector.rotation.set (Math.PI/2.0, 0.0, 0.0);
+		this.minusSelector.position.set (-0.13, -0.06, -0.2);
+		this.minusSelector.visible = false;
+
+		this.plusSelector = new Selector ("plus", "imgs/Plus_Alpha.png");
+		this.plusSelector.name = "plus";
+		this.plusSelector.scale.set (0.05, 0.05, 0.05);
+		this.plusSelector.rotation.set (Math.PI/2.0, 0.0, 0.0);
+		this.plusSelector.position.set (0.13, -0.06, -0.2);
+		this.plusSelector.visible = false;
+
+		this.camera.add (this.minusSelector);
+		this.camera.add (this.plusSelector);
 		this.camera.add(cameraBG);
 
 		//Creamos jugador
@@ -503,6 +521,7 @@ class MyScene extends THREE.Scene {
 		this.jugador.add(this.cameraObj);
 
 		this.jugador.boundingBox = new THREE.Box3 (min,max);
+
 		this.add (this.jugador);
 	}
 
@@ -716,7 +735,7 @@ class MyScene extends THREE.Scene {
 				var selectedPoint = pickedObjects[0].point;
 				//console.log("pick! "+selectedObject.name);
 				//console.log(pickedObjects[0]);
-				switch(selectedObject.name)
+				switch (selectedObject.name)
 				{
 					case "clockHandHour":
 						this.sceneState = MyScene.PICKING_HOURS;
@@ -770,19 +789,56 @@ class MyScene extends THREE.Scene {
 					
 							}
 						}
-
-						break;
-					case "moneyBox":
-						this.chandelier.powerRandomCandles();
 						break;
 					case "lock":
-						if(this.hasKey)
-						{
-							this.doorKey.position.y = 1.6;
-							this.openDoorAnim[0].start();
-							this.hasKey = false;
+							if(this.hasKey)
+							{
+								this.doorKey.position.y = 1.6;
+								this.openDoorAnim[0].start();
+								this.hasKey = false;
+							}
+							break;
+					case "moneyBox":
+						if (this.sceneState != MyScene.INSERTING_COINS) {
+
+							this.sceneState = MyScene.INSERTING_COINS;
+							
+							this.minusSelector.visible = true;
+							this.plusSelector.visible = true;
 						}
-						
+						else {
+
+							this.sceneState = MyScene.NO_ACTION;
+							
+							this.minusSelector.visible = false;
+							this.plusSelector.visible = false;
+						}
+						break;
+					case "minus":
+						console.log (this.sceneState);
+						if (this.sceneState == MyScene.INSERTING_COINS) {
+
+							if (this.numCoins > 0) this.numCoins--;
+
+							console.log (this.numCoins);
+							console.log (MyScene.CORRECT_COINS);
+
+							if (this.numCoins == MyScene.CORRECT_COINS) this.chandelier.powerSolutionCandles();
+							else this.chandelier.powerRandomCandles();
+						}
+						break;
+					case "plus":
+						console.log (this.sceneState);
+						if (this.sceneState == MyScene.INSERTING_COINS) {
+
+							this.numCoins++;
+
+							console.log (this.numCoins);
+							console.log (MyScene.CORRECT_COINS);
+
+							if (this.numCoins == MyScene.CORRECT_COINS) this.chandelier.powerSolutionCandles();
+							else this.chandelier.powerRandomCandles();
+						}
 						break;
 				}
 			}

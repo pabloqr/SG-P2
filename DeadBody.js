@@ -8,13 +8,11 @@ class DeadBody extends THREE.Object3D {
 		var textureLoader = new THREE.TextureLoader ();
 		var bodyTexture = textureLoader.load ("imgs/Snow_001_COLOR.png");
 		var bodyTextNorm = textureLoader.load ("imgs/Snow_001_NORM.png");
-		var bodyTextBump = textureLoader.load ("imgs/Snow_001_ROUGH.png");
 		var bodyTextOutline = textureLoader.load ("imgs/Body_Outline_Alpha.png");
 
 		var bodyMaterial = new THREE.MeshPhongMaterial ({ color : 0xffffff });
 		bodyMaterial.map = bodyTexture;
 		bodyMaterial.normalMap = bodyTextNorm;
-		bodyMaterial.bumpMap = bodyTextBump;
 
 		bodyMaterial.alphaMap = bodyTextOutline;
 		bodyMaterial.transparent = true;

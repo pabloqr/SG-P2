@@ -4,6 +4,7 @@ import { CSG } from './libs/CSG-v2.js'
 
 // Clases del proyecto
 import { Candle } from './ElectricCandle.js';
+import { Message } from './Message.js';
 
 class Chandelier extends THREE.Object3D {
 	constructor (chandelierRadius = 8, chandelierRotation = Math.PI/3.0,shadows = false)
@@ -149,6 +150,61 @@ class Chandelier extends THREE.Object3D {
 		// Se crea la luz
 		this.createLights(shadows);
 
+		// Mensajes
+		var messages = [
+			{ msg : new Message ("2 horas", 50.0, 10.0), row : 0, col : 15 },
+			{ msg : new Message ("3 horas", 50.0, 10.0), row : 2, col : 1 },
+			{ msg : new Message ("6 horas", 50.0, 10.0), row : 1, col : 3 },
+			{ msg : new Message ("9 horas", 50.0, 10.0), row : 0, col : 13 },
+			{ msg : new Message ("10 horas", 40.0, 10.0), row : 3, col : 5 },
+			{ msg : new Message ("15 horas", 40.0, 10.0), row : 3, col : 8 },
+			{ msg : new Message ("18 horas", 40.0, 10.0), row : 1, col : 7 },
+			{ msg : new Message ("21 horas", 40.0, 10.0), row : 2, col : 4 },
+			{ msg : new Message ("23 horas", 40.0, 10.0), row : 0, col : 2 },
+			{ msg : new Message ("0 minutos"), row : 3, col : 11 },
+			{ msg : new Message ("10 minutos"), row : 1, col : 14 },
+			{ msg : new Message ("15 minutos"), row : 3, col : 0 },
+			{ msg : new Message ("30 minutos"), row : 2, col : 10 },
+			{ msg : new Message ("35 minutos"), row : 0, col : 7 },
+			{ msg : new Message ("45 minutos"), row : 1, col : 9 },
+			{ msg : new Message ("50 minutos"), row : 2, col : 13 },
+		];
+
+		messages[0].msg.rotation.set (0.0, Math.PI/4.0, 0.0);
+		messages[0].msg.position.set (5.4, 0.0, -0.2);
+		messages[1].msg.rotation.set (0.0, -Math.PI/4.0, 0.0);
+		messages[1].msg.position.set (-3.8, 0.0, -1.0);
+		messages[2].msg.position.set (-2.8, 0.0, 0.3);
+		messages[3].msg.rotation.set (0.0, Math.PI/16.0, 0.0);
+		messages[3].msg.position.set (4.6, 0.0, 0.3);		
+		messages[4].msg.position.set (-0.6, 0.0, -0.8);
+		messages[5].msg.rotation.set (0.0, Math.PI/10.0, 0.0);
+		messages[5].msg.position.set (1.4, 0.0, -0.9);
+		messages[6].msg.rotation.set (0.0, -Math.PI/8.0, 0.0);
+		messages[6].msg.position.set (-0.1, 0.0, 0.8);
+		messages[7].msg.rotation.set (0.0, -Math.PI/24.0, 0.0);
+		messages[7].msg.position.set (-1.8, 0.0, -0.2);
+		messages[8].msg.rotation.set (0.0, -Math.PI/3.0, 0.0);
+		messages[8].msg.position.set (-4.2, 0.0, 0.6);
+		messages[9].msg.rotation.set (0.0, Math.PI/12.0, 0.0);
+		messages[9].msg.position.set (3.2, 0.0, -1.6);
+		messages[10].msg.rotation.set (0.0, Math.PI/10.0, 0.0);
+		messages[10].msg.position.set (4.9, 0.0, -0.7);
+		messages[11].msg.rotation.set (0.0, -Math.PI/4.0, 0.0);
+		messages[11].msg.position.set (-3.8, 0.0, -2.0);
+		messages[12].msg.position.set (2.4, 0.0, -0.4);
+		messages[13].msg.position.set (-0.4, 0.0, 1.6);
+		messages[14].msg.rotation.set (0.0, Math.PI/4.0, 0.0);
+		messages[14].msg.position.set (1.6, 0.0, 0.6);
+		messages[15].msg.rotation.set (0.0, Math.PI/24.0, 0.0);
+		messages[15].msg.position.set (4.2, 0.0, -1.3);
+
+		for (var i = 0; i < messages.length; ++i) {
+			
+			messages[i].msg.position.y = this.chandelierOptions.l + (0.9+0.3*messages[i].row) + 0.01;
+			chandelier.add (messages[i].msg);
+		}
+
 		this.add (chandelier);
 
 		// Reloj de referencia para las actualizaciones
@@ -209,8 +265,29 @@ class Chandelier extends THREE.Object3D {
 			for (var i = 0; i < this.candles.length; ++i) {
 				for (var j = 0; j < this.candles[i].length; ++j) {
 
+					this.candles[i][j].flameOnMaterial = this.candles[i][j].onMaterial;
 					this.candles[i][j].setCandlePower();
 				}
+			}
+		}
+	}
+
+	powerSolutionCandles ()
+	{
+		this.powerOffCandles();
+
+		this.candles[2][10].candlePower = true;
+		this.candles[3][5].candlePower = true;
+
+		this.candlesPowered[0] = 6;
+		this.candlesPowered[1] = 6;
+		this.candlesPowered[2] = 6;
+
+		for (var i = 0; i < this.candles.length; ++i) {
+			for (var j = 0; j < this.candles[i].length; ++j) {
+
+				this.candles[i][j].flameOnMaterial = this.candles[i][j].solutionMaterial;
+				this.candles[i][j].setCandlePower();
 			}
 		}
 	}
@@ -246,64 +323,6 @@ class Chandelier extends THREE.Object3D {
 			this.pointLights.push (pointLight);
 			this.add (pointLight);
 		}
-
-		/*
-		// LUZ IZQUIERDA
-		var pointLightLeft = new THREE.PointLight (0xffe138, 0.3, 0, 0);
-		pointLightLeft.position.set (
-			(this.chandelierOptions.l-widthVar) * Math.sin (alpha), 
-			this.chandelierOptions.l + 3.0, 
-			(this.chandelierOptions.l-(widthVar*2)) * Math.cos (alpha) - this.chandelierOptions.l + 2.1);
-		pointLightLeft.visible = (this.candlesPowered[0]) ? true : false;
-
-		alpha += angle;
-
-		// Opciones para las sombras
-		pointLightLeft.castShadow = true;
-		pointLightLeft.shadow.mapSize.width = 512;
-		pointLightLeft.shadow.mapSize.height = 512;
-		pointLightLeft.shadow.camera.near = 0.5;
-		pointLightLeft.shadow.camera.far = 500;
-
-		this.pointLights.push (pointLightCentral)
-		this.add (pointLightLeft);
-
-		// LUZ CENTRAL
-		var pointLightCentral = new THREE.PointLight (0xffe138, 0.3, 0, 0);
-		pointLightCentral.position.set (
-			(this.chandelierOptions.l-widthVar) * Math.sin (alpha), 
-			this.chandelierOptions.l + 3.0, 
-			(this.chandelierOptions.l-(widthVar*2)) * Math.cos (alpha) - this.chandelierOptions.l + 2.1);
-		pointLightCentral.visible = (this.candlesPowered[1]) ? true : false;
-
-		alpha += angle;
-
-		// Opciones para las sombras
-		pointLightCentral.castShadow = true;
-		pointLightCentral.shadow.mapSize.width = 512;
-		pointLightCentral.shadow.mapSize.height = 512;
-		pointLightCentral.shadow.camera.near = 0.5;
-		pointLightCentral.shadow.camera.far = 500;
-
-		this.add (pointLightCentral);
-
-		// LUZ DERECHA
-		var pointLightRight = new THREE.PointLight (0xffe138, 0.3, 0, 0);
-		pointLightRight.position.set (
-			(this.chandelierOptions.l-widthVar) * Math.sin (alpha), 
-			this.chandelierOptions.l + 3.0, 
-			(this.chandelierOptions.l-(widthVar*2)) * Math.cos (alpha) - this.chandelierOptions.l + 2.1);
-		pointLightRight.visible = (this.candlesPowered[2]) ? true : false;
-
-		// Opciones para las sombras
-		pointLightRight.castShadow = true;
-		pointLightRight.shadow.mapSize.width = 512;
-		pointLightRight.shadow.mapSize.height = 512;
-		pointLightRight.shadow.camera.near = 0.5;
-		pointLightRight.shadow.camera.far = 500;
-
-		this.add (pointLightRight);
-		*/
 	}
 
 	update ()

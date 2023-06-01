@@ -110,7 +110,7 @@ class Clock extends THREE.Object3D {
 		materialLoader.load(
 			"models/clock.mtl",
 			(materials) => {
-				console.log(materials);
+				//console.log(materials);
 				objectLoader.setMaterials(materials);
 				objectLoader.load(
 					'models/clock.obj',
@@ -161,7 +161,7 @@ class Clock extends THREE.Object3D {
 		materialLoader.load(
 			"models/clockFace.mtl",
 			(materials) => {
-				console.log(materials);
+				//console.log(materials);
 				objectLoader.setMaterials(materials);
 				objectLoader.load(
 					'models/clockFace.obj',
