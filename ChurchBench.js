@@ -60,11 +60,13 @@ class ChurchBench extends THREE.Object3D {
 
 		// Se añade al modelo
 		this.add (bench);
-		bench.traverseVisible( function( node ) { if ( node instanceof THREE.Mesh ) 
-			{ 
+		bench.traverseVisible (function (node) { 
+			if (node instanceof THREE.Mesh) { 
+				
 				node.castShadow = true; 
 				node.receiveShadow = true;
-			}});
+			}
+		});
 					
 	}
 }

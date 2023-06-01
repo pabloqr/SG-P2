@@ -80,13 +80,10 @@ class Candle extends THREE.Object3D
 			this.fire0.scale.x = Math.random()*0.1+1;
 			this.fire1.scale.x = Math.random()*0.1+1;
 		}
-
-
 	}
 
 	toggleFire()
 	{
-		console.log("toggleLight");
 		if(this.activeFire)
 		{
 			this.activeFire = false;

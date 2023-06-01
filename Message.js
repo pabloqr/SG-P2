@@ -6,7 +6,6 @@ class Message extends THREE.Object3D {
 		super();
 
 		const canvas = document.createElement ("canvas");
-
 		const context = canvas.getContext ("2d");
 
 		// Estilo del texto
@@ -43,7 +42,6 @@ class Message extends THREE.Object3D {
 
 		this.position.y = 0.01;
 		
-		//var scale = (Math.random() * 0.05) + 0.05;
 		var scale = 0.08;
 		this.scale.set (scale, scale, scale);
 	}
