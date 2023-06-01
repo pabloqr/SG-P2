@@ -798,26 +798,18 @@ class MyScene extends THREE.Scene {
 						}
 						break;
 					case "minus":
-						console.log (this.sceneState);
 						if (this.sceneState == MyScene.INSERTING_COINS) {
 
 							if (this.numCoins > 0) this.numCoins--;
-
-							console.log (this.numCoins);
-							console.log (MyScene.CORRECT_COINS);
 
 							if (this.numCoins == MyScene.CORRECT_COINS) this.chandelier.powerSolutionCandles();
 							else this.chandelier.powerRandomCandles();
 						}
 						break;
 					case "plus":
-						console.log (this.sceneState);
 						if (this.sceneState == MyScene.INSERTING_COINS) {
 
 							this.numCoins++;
-
-							console.log (this.numCoins);
-							console.log (MyScene.CORRECT_COINS);
 
 							if (this.numCoins == MyScene.CORRECT_COINS) this.chandelier.powerSolutionCandles();
 							else this.chandelier.powerRandomCandles();

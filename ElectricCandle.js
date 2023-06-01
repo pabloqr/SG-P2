@@ -3,15 +3,13 @@ import { MTLLoader } from './libs/MTLLoader.js'
 import { OBJLoader } from './libs/OBJLoader.js'
 
 class Candle extends THREE.Object3D {
-	constructor(powerOn = false)
+	constructor (powerOn = false)
 	{
 		super();
 
 		// Opciones de la llama
-		this.onMaterial = new THREE.MeshLambertMaterial ({ color : 0xfaefd4, emissive : 0xffe44a, emissiveIntensity : 1 });
-		this.solutionMaterial = new THREE.MeshLambertMaterial ({ color : 0x000000, emissive : 0x450000, emissiveIntensity : 1 });
-		this.flameOffMaterial = new THREE.MeshLambertMaterial ({ color : 0xa39a83 });
-		this.flameOnMaterial = this.onMaterial;
+		this.flameOffMaterial = new THREE.MeshLambertMaterial ({ color : 0x450000 });
+		this.flameOnMaterial = new THREE.MeshLambertMaterial ({ color : 0xfaefd4, emissive : 0xffe44a, emissiveIntensity : 1 });
 		this.candlePower = powerOn;
 
 		// Propiedades de la vela
@@ -49,19 +47,6 @@ class Candle extends THREE.Object3D {
 	setCandlePower ()
 	{
 		this.flameMesh.material = (this.candlePower) ? this.flameOnMaterial : this.flameOffMaterial;
-	}
-
-	createGUI (gui, titleGui)
-	{
-		this.guiControls = {
-			candlePower : false
-		};
-
-		// Sección para para los controles de la vela
-		var folder = gui.addFolder (titleGui);
-
-		// Se añaden los componentes de la interfaz
-		folder.add (this.guiControls, 'candlePower').name ("Vela On/Off : ").onChange ((value) => this.setCandlePower (value));
 	}
 }
 

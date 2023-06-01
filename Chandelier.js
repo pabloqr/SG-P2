@@ -7,7 +7,7 @@ import { Candle } from './ElectricCandle.js';
 import { Message } from './Message.js';
 
 class Chandelier extends THREE.Object3D {
-	constructor (chandelierRadius = 8, chandelierRotation = Math.PI/3.0,shadows = false)
+	constructor (chandelierRadius = 8, chandelierRotation = Math.PI/3.0, shadows = false)
 	{
 		super();
 
@@ -265,7 +265,6 @@ class Chandelier extends THREE.Object3D {
 			for (var i = 0; i < this.candles.length; ++i) {
 				for (var j = 0; j < this.candles[i].length; ++j) {
 
-					this.candles[i][j].flameOnMaterial = this.candles[i][j].onMaterial;
 					this.candles[i][j].setCandlePower();
 				}
 			}
@@ -286,7 +285,6 @@ class Chandelier extends THREE.Object3D {
 		for (var i = 0; i < this.candles.length; ++i) {
 			for (var j = 0; j < this.candles[i].length; ++j) {
 
-				this.candles[i][j].flameOnMaterial = this.candles[i][j].solutionMaterial;
 				this.candles[i][j].setCandlePower();
 			}
 		}
