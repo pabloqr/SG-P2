@@ -757,6 +757,8 @@ class MyScene extends THREE.Scene {
 
 						// Solución del puzle (binario): 26	21
 						this.binaryPuzzle = [
+						//
+						//+Sig		-Sig
 							false,true,
 							true,false,
 							false,true,

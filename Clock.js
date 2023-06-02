@@ -131,6 +131,11 @@ class Clock extends THREE.Object3D {
 	}
 
 	door() {
+
+		var glassMat = new THREE.MeshPhysicalMaterial({color : 0x2f2f2f ,transparent:true,opacity:0.3,specularIntensity:0.6});
+		var glass = new THREE.Mesh(new THREE.BoxGeometry(0.02,2.85,1.1),glassMat);
+		glass.position.set (-0.63,2.05,0);
+
 		var materialLoader = new MTLLoader();
 		var objectLoader = new OBJLoader();
 		materialLoader.load(
@@ -142,6 +147,7 @@ class Clock extends THREE.Object3D {
 					(object) => {
 						object.position.set(0.65, 0, -0.6);
 						this.doorHinge.add(object);
+						object.add(glass);
 						object.traverseVisible(function (node) {
 							if (node instanceof THREE.Mesh) {
 								node.receiveShadow = true;
