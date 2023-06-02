@@ -161,11 +161,7 @@ class MyScene extends THREE.Scene {
 		this.setupTrees();
 
 		// Creación del suelo (modelo cargado de disco)
-		var ground = new Ground()
-		this.add(ground);
-		// ground.rotation.y = Math.PI/2;
-		ground.position.set(0,-0.5,0);
-		// ground.scale.set(3,3,3);
+		this.createGround();
 
 		// Creación de columnas y candelabros (modelos cargados de disco)
 		var columnSeparation = 21;
@@ -478,22 +474,25 @@ class MyScene extends THREE.Scene {
 		this.stats = stats;
 	}
 
-	createCamera () {
+	createCamera ()
+	{
 		// Para crear la cámara y poder hacer un uso natural vamos a crear una serie de objetos
 		// a los que se les aplicará diferentes transformaciones que nos permitan
 		// movernos por la escena y mirar alrededor:
 		//   - Instancia de la cámara en perspectiva
 		//   - Objeto de la cámara que gestiona las rotaciones
 		//   - Objeto del jugador que gestiona el movimiento
+		//
 		// Para crear una cámara le indicamos
-		//   El ángulo del campo de visión en grados sexagesimales
-		//   La razón de aspecto ancho/alto
-		//   Los planos de recorte cercano y lejano
+		//   - El ángulo del campo de visión en grados sexagesimales
+		//   - La razón de aspecto ancho/alto
+		//   - Los planos de recorte cercano y lejano
 		this.camera = new THREE.PerspectiveCamera (45, window.innerWidth / window.innerHeight, 0.1, 1000);
 		this.cameraObj = new THREE.Object3D ();
 		this.cameraObj.position.set (0, 2, 0);
 		this.cameraObj.add (this.camera);
 
+		// Parámetros de movimiento de la cámara
 		this.cameraHAngle = 0.0;
 		this.cameraVAngle = 0.0;
 
@@ -501,12 +500,14 @@ class MyScene extends THREE.Scene {
 			right: 0, left: 0, front: 0, back: 0
 		};
 
+		// Para fundir en negro al finalizar el juego (anclado a la cámara para que dependa de su movimiento)
 		this.bgMat = new THREE.MeshBasicMaterial({color : 0x000000 ,transparent:true,opacity:0});
 
 		var cameraBG = new THREE.Mesh(new THREE.BoxGeometry(10,1,10),this.bgMat);
 		cameraBG.position.z = -1;
 		cameraBG.rotation.x = Math.PI/2;
-		
+
+		// Selectores para insertar monedas en el lampadario (anlclados a la cámara)
 		this.minusSelector = new Selector ("minus", "imgs/Minus_Alpha.png");
 		this.minusSelector.scale.set (0.05, 0.05, 0.05);
 		this.minusSelector.rotation.set (Math.PI/2.0, 0.0, 0.0);
@@ -520,11 +521,15 @@ class MyScene extends THREE.Scene {
 		this.plusSelector.position.set (0.13, -0.06, -0.2);
 		this.plusSelector.visible = false;
 
+		this.camera.add(cameraBG);
 		this.camera.add (this.minusSelector);
 		this.camera.add (this.plusSelector);
-		this.camera.add(cameraBG);
 
-		//Creamos jugador
+		// Creamos jugador
+		//   - Es un objeto vacío
+		//   - Es el padre del objeto que contiene la cámara
+		//   - Contiene la caja englobante para que funcionen correctamente las colisiones con el resto
+		//     de elementos de la escena
 		this.jugador = new THREE.Object3D ();
 		this.jugador.position.z = 90;
 		const min = new THREE.Vector3(-0.5, 0, -0.5);
@@ -536,48 +541,46 @@ class MyScene extends THREE.Scene {
 		this.add (this.jugador);
 	}
 
-	createGround () {
+	createGround ()
+	{
 		// El suelo es un Mesh, necesita una geometría y un material.
 
-		// La geometría es una caja con muy poca altura
-		var geometryGround = new THREE.BoxGeometry (50,0.2,50);
+		// Se carga el modelo que contiene el mesh y se le incluye la textura con apariencia de césped
+		var ground = new Ground ()
 
-		// El material se hará con una textura de madera
-		var texture = new THREE.TextureLoader().load('../imgs/wood.jpg');
-		var materialGround = new THREE.MeshPhongMaterial ({map: texture});
-
-		// Ya se puede construir el Mesh
-		var ground = new THREE.Mesh (geometryGround, materialGround);
-
-		// Todas las figuras se crean centradas en el origen.
-		// El suelo lo bajamos la mitad de su altura para que el origen del mundo se quede en su lado superior
-		ground.position.y = -0.1;
+		// ground.rotation.y = Math.PI/2;
+		ground.position.set (0,-0.5,0);
+		// ground.scale.set (3,3,3);
 
 		// Que no se nos olvide añadirlo a la escena, que en este caso es  this
 		this.add (ground);
 	}
 
-	createLights () {
+	createLights ()
+	{
 		// Se crea una luz ambiental, evita que se vean complentamente negras las zonas donde no incide de manera directa una fuente de luz
 		// La luz ambiental solo tiene un color y una intensidad
-		// Se declara como   var   y va a ser una variable local a este método
-		//    se hace así puesto que no va a ser accedida desde otros métodos
+		// Se declara como var y va a ser una variable local a este método se hace así puesto que no va a ser accedida desde otros métodos
+		var ambientLight = new THREE.AmbientLight (0xccddee, 0.6);
+		
+		// Se crea una luz direccional que representa la luz que procede de la Luna en el exterior
+		// Requiere un color y la intensidad y, por otro lado, un vector con las coordenadas 3D a las que debe apuntar
 		var dirLightTarget = new THREE.Object3D();
 		dirLightTarget.position.set(0,15,0);
-		var ambientLight = new THREE.AmbientLight(0xccddee, 0.6);
-		var directionLight = new THREE.DirectionalLight(0xc9fcf9,0.9);
+		var directionLight = new THREE.DirectionalLight (0xc9fcf9, 0.9);
 		directionLight.position.set(20,65,100);
 		directionLight.target = dirLightTarget;
 
 		var shadowRes = 2048;
 
-		//Configuracion de las luces
+		// Parámetros de configuracion de las sombras que generan la luz direccional
 		directionLight.castShadow = true;
 		directionLight.shadow.mapSize.width = shadowRes;
 		directionLight.shadow.mapSize.height = shadowRes;
 		directionLight.shadow.camera.near = 0.5;
 		directionLight.shadow.camera.far = 200;
 
+		// Parámetros de configuración del tamaño de la luz direccional
 		var dirLightSize = 50;
 
 		directionLight.shadow.camera.left = -dirLightSize;
@@ -585,21 +588,24 @@ class MyScene extends THREE.Scene {
 		directionLight.shadow.camera.right = dirLightSize;
 		directionLight.shadow.camera.top = dirLightSize;
 
-		// La añadimos a la escena
+		// Se añaden todos los elementos a la escena
 		this.add (ambientLight);
 		this.add (directionLight);
 		this.add (dirLightTarget);
 	}
 
-	setLightIntensity (valor) {
+	setLightIntensity (valor)
+	{
 		this.spotLight.intensity = valor;
 	}
 
-	setAxisVisible (valor) {
+	setAxisVisible (valor)
+	{
 		this.axis.visible = valor;
 	}
 
-	createRenderer (myCanvas) {
+	createRenderer (myCanvas)
+	{
 		// Se recibe el lienzo sobre el que se van a hacer los renderizados. Un div definido en el html.
 
 		// Se instancia un Renderer   WebGL
@@ -617,13 +623,15 @@ class MyScene extends THREE.Scene {
 		return renderer;  
 	}
 
-	getCamera () {
+	getCamera ()
+	{
 		// En principio se devuelve la única cámara que tenemos
 		// Si hubiera varias cámaras, este método decidiría qué cámara devuelve cada vez que es consultado
 		return this.camera;
 	}
 
-	setCameraAspect (ratio) {
+	setCameraAspect (ratio)
+	{
 		// Cada vez que el usuario modifica el tamaño de la ventana desde el gestor de ventanas de
 		// su sistema operativo hay que actualizar el ratio de aspecto de la cámara
 		this.camera.aspect = ratio;
@@ -631,7 +639,8 @@ class MyScene extends THREE.Scene {
 		this.camera.updateProjectionMatrix();
 	}
 
-	onWindowResize () {
+	onWindowResize ()
+	{
 		// Este método es llamado cada vez que el usuario modifica el tamapo de la ventana de la aplicación
 		// Hay que actualizar el ratio de aspecto de la cámara
 		this.setCameraAspect (window.innerWidth / window.innerHeight);
@@ -642,16 +651,22 @@ class MyScene extends THREE.Scene {
 
 	onMouseDown (event)
 	{
+		// Se procesa el evento de click con el botón izquierdo del ratón
+		// Se emplea para mover la cámara mientras esté pulsado
+
 		if (event.which == 1) {
 
-			this.cameraRotation = true;
-			this.mousePosition = { x: event.clientX, y: event.clientY };
+			this.cameraRotation = true;										// Se activa el movimiento de la cámara
+			this.mousePosition = { x: event.clientX, y: event.clientY };	// Se almacena la posición actual del ratón
 		}
 	}
 
 	onMouseUp (event)
 	{
-		if(this.sceneState == MyScene.NO_ACTION)
+		// Se procesa el evento de soltar el botón izquierdo del ratón
+		// Se emplea para poder parar de mover la cámara
+
+		if(this.sceneState == MyScene.NO_ACTION) // Para el movimiento de la cámara no se puede estar realizando una acción en la escena
 		{
 			if (event.which == 1) {
 
@@ -662,34 +677,41 @@ class MyScene extends THREE.Scene {
 
 	onMouseMove (event)
 	{
+		// Se procesa el movimiento del ratón
+		// Se emplea para calcular la rotación de la cámara
+
 		this.mouse = { x: 0, y: 0};
 
 		this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
 		this.mouse.y = 1 - 2 * (event.clientY / window.innerHeight);
 
-
-		if(this.sceneState == MyScene.NO_ACTION)
+		if(this.sceneState == MyScene.NO_ACTION) // No se puede estar realizando una acción en la escena
 		{
-			if (this.cameraRotation) {
+			if (this.cameraRotation) { // Si el botón está pulsado
 
+				// Diferencia de movimiento
 				this.mouseDelta = {
-				x: event.clientX - this.mousePosition.x,
-				y: event.clientY - this.mousePosition.y
+					x: event.clientX - this.mousePosition.x,
+					y: event.clientY - this.mousePosition.y
 				};
 
+				// Posición actual
 				this.mousePosition.x = event.clientX;
 				this.mousePosition.y = event.clientY;
 
+				// Normalización de los valores
 				var cameraDelta = {
-				h: this.mouseDelta.x / window.innerWidth,
-				v: this.mouseDelta.y / window.innerHeight
+					h: this.mouseDelta.x / window.innerWidth,
+					v: this.mouseDelta.y / window.innerHeight
 				};
 
 				var cameraRotationSpeed = 3;
 
+				// Cálculo de la rotación
 				this.cameraHAngle += cameraDelta.h*cameraRotationSpeed;
 				this.cameraVAngle += cameraDelta.v*(cameraRotationSpeed*(window.innerHeight/window.innerWidth));
 
+				// Aplicación de la rotación al objeto correspondiente
 				this.camera.rotation.x = -this.cameraVAngle;
 				this.cameraObj.rotation.y = -this.cameraHAngle;
 			}
@@ -698,39 +720,42 @@ class MyScene extends THREE.Scene {
 
 	onDoubleClick(event)
 	{
+		// Se procesa el doble click del botón izquierdo del ratón
+		// Se trata del método que implementa el "picking" en la escena
+		// Se ha elegido hacer doble click en vez de click simple para que no haya errores junto con el movimiento de la cámara
+
 		if(event.button == 0)
 		{
-			this.raycaster.setFromCamera (this.mouse, this.camera);
+			this.raycaster.setFromCamera (this.mouse, this.camera);								// Se establece el rayo
+			var pickedObjects = this.raycaster.intersectObjects (this.pickableObjects, true);	// Se calculan los objetos que atraviesa
 
-			var pickedObjects = this.raycaster.intersectObjects (this.pickableObjects, true);
-
-			if(pickedObjects.length>0)
+			if (pickedObjects.length>0) // Si se han detectado objetos se procesa
 			{
 				var selectedObject = pickedObjects[0].object.userData;
 				var selectedPoint = pickedObjects[0].point;
 				//console.log("pick! "+selectedObject.name);
 				//console.log(pickedObjects[0]);
-				switch (selectedObject.name)
+				switch (selectedObject.name) // Se selecciona el objeto clickado
 				{
-					case "clockHandHour":
+					case "clockHandHour": // Manecilla de las horas del reloj
 						this.sceneState = MyScene.PICKING_HOURS;
 						break;
-					case "clockHandMinute":
+					case "clockHandMinute": // Manecilla de los minutos del reloj
 						this.sceneState = MyScene.PICKING_MINUTES;
 						break;
-					case "key":
-						if(this.clockModel.isActive())
+					case "key": // Llave del compartimento del reloj
+						if (this.clockModel.isActive()) // Sólo si se ha abierto el compartimento
 						{
 							selectedObject.position.y = -10;
 							this.hasKey = true;
 						}
 						break;
-					case "candle":
+					case "candle": // Candelabro
 						selectedObject.toggleFire();
 
 						var valid = true;
 
-						//	26	21
+						// Solución del puzle (binario): 26	21
 						this.binaryPuzzle = [
 							false,true,
 							true,false,
@@ -739,17 +764,17 @@ class MyScene extends THREE.Scene {
 							true,true
 						];
 
-						if(this.secretDoorActivated==false)
+						if (this.secretDoorActivated==false)
 						{
-							for(var i = 0; i < this.candles.length;i++)
+							for (var i = 0; i < this.candles.length;i++) // Se comprueba la solución
 							{
-								if(this.candles[i].activeFire != this.binaryPuzzle[i])
+								if (this.candles[i].activeFire != this.binaryPuzzle[i])
 								{
 									valid = false;
 								}
 							}
 	
-							if(valid==true)
+							if (valid==true) // Si se ha dado la solución
 							{
 								this.secretDoorActivated = true;
 								this.secretDoorAnim[0].start();
@@ -761,27 +786,27 @@ class MyScene extends THREE.Scene {
 									soundEvent.setVolume( 1 );
 									soundEvent.play();
 								});
-					
 							}
 						}
 						break;
-					case "lock":
-							if(this.hasKey)
+					case "lock": // Cerrojo de la puerta
+							if (this.hasKey) // Sólo si se tiene la llave
 							{
 								this.doorKey.position.y = 1.6;
 								this.openDoorAnim[0].start();
 								this.hasKey = false;
 							}
 							break;
-					case "moneyBox":
-						if (this.sceneState != MyScene.INSERTING_COINS && this.hasCoins) {
+					case "moneyBox": // Caja para insertar monedas (lampadario)
+						if (this.sceneState != MyScene.INSERTING_COINS && this.hasCoins) { // Sólo si no se están insertando monedas y se han cogido las monedas
 
 							this.sceneState = MyScene.INSERTING_COINS;
 							
+							// Se hacen visibles los selectores para insertar monedas
 							this.minusSelector.visible = true;
 							this.plusSelector.visible = true;
 						}
-						else {
+						else { // Si no se cumple, se desactiva la acción y los selectores
 
 							this.sceneState = MyScene.NO_ACTION;
 							
@@ -789,34 +814,40 @@ class MyScene extends THREE.Scene {
 							this.plusSelector.visible = false;
 						}
 						break;
-					case "minus":
+					case "minus": // Selector para restar monedas
 						if (this.sceneState == MyScene.INSERTING_COINS) {
 
 							if (this.numCoins > 0) this.numCoins--;
 
+							// Si es solución se encienden dos velas concretas, si no, se encienden aleatoriamente
 							if (this.numCoins == this.CORRECT_COINS) this.chandelier.powerSolutionCandles();
 							else this.chandelier.powerRandomCandles();
 						}
 						break;
-					case "plus":
+					case "plus": // Selector para sumar monedas
 						if (this.sceneState == MyScene.INSERTING_COINS) {
 
 							this.numCoins++;
 
+							// Si es solución se encienden dos velas concretas, si no, se encienden aleatoriamente
 							if (this.numCoins == this.CORRECT_COINS) this.chandelier.powerSolutionCandles();
 							else this.chandelier.powerRandomCandles();
 						}
 						break;
-					case "coins":
-						if (!this.hasCoins) this.table.coins.visible = false;
-						this.hasCoins = true;
+					case "coins": // Monedas: al cogerlas se ocultan (sólo se pueden coger una vez)
+						if (!this.hasCoins) {
+							
+							this.table.coins.visible = false;
+							this.hasCoins = true;
+						}
 						break;
 				}
 			}
-			else
+			else // Si no se han detectado objetos se desactiva el estado de la escena y los elementos que dependen del "picking"
 			{
 				this.sceneState = MyScene.NO_ACTION;
 				this.cameraRotation = false;
+
 				this.minusSelector.visible = false;
 				this.plusSelector.visible = false;
 			}
@@ -825,11 +856,14 @@ class MyScene extends THREE.Scene {
 
 	keyboardKeyDown (event)
 	{
+		// Se procesa la pulsación de una tecla del teclado
+		// Se usa para calcular el movimiento del jugador cuando pulsa las teclas WASD
+
 		this.key = event.which || event.key;
 
 		if(this.sceneState == MyScene.NO_ACTION)
 		{
-			switch (String.fromCharCode (this.key).toUpperCase())
+			switch (String.fromCharCode (this.key).toUpperCase()) // Se selecciona la dirección en función de la tecla
 			{
 				case 'W': this.cameraMovement.front = 1; break;
 				case 'A': this.cameraMovement.left = 1; break;
@@ -838,7 +872,8 @@ class MyScene extends THREE.Scene {
 			}
 		}
 
-		if(this.soundCreated==false)
+		// Se crean los sonidos de la escena
+		if (this.soundCreated==false)
 		{
 			this.soundCreated = true;
 
@@ -863,11 +898,14 @@ class MyScene extends THREE.Scene {
 
 	keyboardKeyUp (event)
 	{
+		// Se procesa dejar de pulsar una tecla del teclado
+		// Se emplea para determinar el momento en el que se deja de mover el jugador
+
 		this.key = event.which || event.key;
 
 		if(this.sceneState == MyScene.NO_ACTION)
 		{
-			switch (String.fromCharCode (this.key).toUpperCase())
+			switch (String.fromCharCode (this.key).toUpperCase()) // Se selecciona la dirección en función de la tecla
 			{
 				case 'W': this.cameraMovement.front = 0; break;
 				case 'A': this.cameraMovement.left = 0; break;
@@ -879,40 +917,53 @@ class MyScene extends THREE.Scene {
 
 	updateCamera ()
 	{
-		var cameraMoveSpeed = 20;
+		// Se actualiza la posición del jugador según las teclas que tenga pulsadas
+		// Al hacerlo de esta manera, se permite que el jugador se mueva en dos direcciones a la vez (en diagonal)
+
+		var cameraMoveSpeed = 15;
 		var cameraMove = this.cameraMovement.right || this.cameraMovement.left || this.cameraMovement.front || this.cameraMovement.back;
 
-		if (cameraMove) {
+		if (cameraMove) { // Se actualiza si el jugador se está moviendo en alguna dirección
 
+			// Se calcula el sentido del movimiento
 			var xMove = this.cameraMovement.right - this.cameraMovement.left;
 			var yMove = this.cameraMovement.back - this.cameraMovement.front;
 
+			// Rotación de la cámara
 			var rot = this.cameraObj.rotation.y + Math.atan2 (xMove, yMove);
 
+			// Se almacena la posición previa a la actualización
 			var lastPosition = {
 				x : this.jugador.position.x,
 				z : this.jugador.position.z
 			};
 
+			// Se calcula la nueva posición del jugador teniendo en cuenta la rotación de la cámara
 			this.jugador.position.x += Math.sin (rot)*cameraMoveSpeed*this.deltaTime;
 			this.jugador.position.z += Math.cos (rot)*cameraMoveSpeed*this.deltaTime;
 
+			// Se actualiza la posición de la caja englobante del jugador
+			// Primero se hace en la componente X
 			var min = new THREE.Vector3(-0.5+this.jugador.position.x, 0, -0.5+lastPosition.z);
 			var max = new THREE.Vector3(0.5+this.jugador.position.x, 2.5, 0.5+lastPosition.z);
 			this.jugador.boundingBox.min = min;
 			this.jugador.boundingBox.max = max;
 
+			// Se calcula si hay colisiones
 			this.collisionBoxArray.forEach(collider => {
 				if(this.jugador.boundingBox.intersectsBox(collider))
 				{
 					this.jugador.position.x = lastPosition.x;
 				}
-			})
+			});
 
+			// Ahora se hace en la componente Z
 			min = new THREE.Vector3(-0.5+this.jugador.position.x, 0, -0.5+this.jugador.position.z);
 			max = new THREE.Vector3(0.5+this.jugador.position.x, 2.5, 0.5+this.jugador.position.z);
 			this.jugador.boundingBox.min = min;
 			this.jugador.boundingBox.max = max;
+
+			// Se calcula si hay colisiones
 			this.collisionBoxArray.forEach(collider => {
 				if(this.jugador.boundingBox.intersectsBox(collider))
 				{
@@ -924,9 +975,11 @@ class MyScene extends THREE.Scene {
 	
 	updateClockModel()
 	{
-		var handDelta = Math.PI*2/60*this.deltaTime;//una vuelta en 1 minuto
+		// Se actualiza la hora del reloj en tiempo real
 
-		if(this.sceneState == MyScene.PICKING_HOURS || this.sceneState == MyScene.PICKING_MINUTES )
+		var handDelta = Math.PI*2/60*this.deltaTime; //una vuelta en 1 minuto
+
+		if (this.sceneState == MyScene.PICKING_HOURS || this.sceneState == MyScene.PICKING_MINUTES ) // Se verifica que se ha seleccionado una de las manecillas
 		{
 			var center = this.clockModel.getClockCenter();
 
@@ -939,12 +992,11 @@ class MyScene extends THREE.Scene {
 	
 			var angle;
 	
-			if(pickedObjects.length>0)
+			if (pickedObjects.length>0) // Se calcula el ángulo de la manecilla
 			{
 				var selectedPoint = pickedObjects[0].point;
 
-				var v = 
-				{
+				var v = {
 					x:selectedPoint.z-center.z,
 					y:selectedPoint.y-center.y
 				}
@@ -952,9 +1004,9 @@ class MyScene extends THREE.Scene {
 				angle = Math.sign(v.y) * Math.acos(v.x/((Math.sqrt(v.x*v.x+v.y*v.y))));
 			}
 
-			if( !isNaN(angle))
+			if (!isNaN(angle))
 			{
-				if(this.sceneState == MyScene.PICKING_HOURS )
+				if (this.sceneState == MyScene.PICKING_HOURS) // Se aplica el ángulo a la manecilla correcta
 				{
 					this.clockModel.setHours(angle);
 				}
@@ -964,12 +1016,12 @@ class MyScene extends THREE.Scene {
 				}
 			}
 		}
-		else
+		else // Si no se está modificando la hora, se actualiza en tiempo real
 		{
 			this.clockModel.incrementHour(handDelta);
 		}
 
-		//probar si la hora es correcta
+		// Probar si la hora es correcta
 		this.clockModel.testTime(10.5,this.deltaTime);
 		this.clockModel.openDoor(this.deltaTime);
 		this.clockModel.update();
@@ -979,22 +1031,18 @@ class MyScene extends THREE.Scene {
 	{
 		if (this.stats) this.stats.update();
 
-		this.deltaTime = this.clock.getDelta();
-
+		
 		// Se actualizan los elementos de la escena para cada frame
+		// Se obtiene el delta de tiempo desde la última actualización para que no dependa de las prestaciones del equipo
+		this.deltaTime = this.clock.getDelta();
 
 		// Se actualiza la posición de la cámara según su controlador
 		this.updateCamera();
-		//this.cameraControl.update();
 
 		// Se actualiza el resto del modelo
-		this.chandelier.update();
-
-		// this.doorHingeLeft.rotateY(0.02);
-
-		this.updateClockModel();
-
-		this.candles.forEach(candle => {
+		this.chandelier.update();			// Iluminación del lampadario
+		this.updateClockModel();			// Hora del reloj
+		this.candles.forEach(candle => {	// Orientación de la llama de los candelabros
 			candle.update(this.cameraObj.rotation.y);
 		});
 
@@ -1006,7 +1054,7 @@ class MyScene extends THREE.Scene {
 		// Si no existiera esta línea,  update()  se ejecutaría solo la primera vez.
 		requestAnimationFrame(() => this.update())
 
-		//cerrar la puerta cuando se entre a la iglesia por primera vez
+		// Se cierra la puerta cuando se entre a la iglesia por primera vez
 		if(this.jugador.position.z < 30 && this.closedExit == false)
 		{	
 			this.closeDoorAnim[0].start();
@@ -1014,7 +1062,7 @@ class MyScene extends THREE.Scene {
 			this.collisionBoxArray.push(this.exitBB);
 		}
 
-		//finalizar el juego cuando se salga de la iglesia
+		// Se finaliza el juego cuando se salga de la iglesia
 		if(this.jugador.position.z>40 && this.closedExit == true)
 		{
 			this.bgMat.opacity+=this.deltaTime*0.5;
@@ -1031,13 +1079,16 @@ $(function () {
 	// Se añaden los listener de la aplicación. En este caso, el que va a comprobar cuándo se modifica el tamaño de la ventana de la aplicación.
 	window.addEventListener ("resize", () => scene.onWindowResize());
 
+	// Listeners para rotación de la cámara
 	window.addEventListener ("mousedown", (event) => scene.onMouseDown (event));
 	window.addEventListener ("mouseup", (event) => scene.onMouseUp (event));
 	window.addEventListener ("mousemove", (event) => scene.onMouseMove (event));
 
+	// Listeners para movimiento del jugador
 	window.addEventListener ("keydown", (event) => scene.keyboardKeyDown (event));
 	window.addEventListener ("keyup", (event) => scene.keyboardKeyUp (event));
 
+	// Listener para "picking"
 	window.addEventListener ("dblclick", (event) => scene.onDoubleClick (event));
 
 	// Que no se nos olvide, la primera visualización.
