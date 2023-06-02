@@ -22,7 +22,9 @@ import { Selector } from './Selector.js';
 import { Table } from './Table.js';
 import { Painting } from './Painting.js';
 
-/// La clase fachada del modelo
+// --------------------------------------------------------------------------------------------- //
+
+// La clase fachada del modelo
 /**dw
  * Usaremos una clase derivada de la clase Scene de Three.js para llevar el control de la escena y de todo lo que ocurre en ella.
  */
@@ -32,6 +34,7 @@ class MyScene extends THREE.Scene {
 	{
 		super();
 
+		// Para determinar si se calculan las sombras de las PointLights
 		var pointShadows = false;
 
 		// Estado de la escena
@@ -40,11 +43,12 @@ class MyScene extends THREE.Scene {
 		MyScene.PICKING_HOURS = 2;
 		MyScene.INSERTING_COINS = 3;
 
-		this.sceneState = MyScene.NO_ACTION;
-		this.hasCoins = false;
-		this.CORRECT_COINS = 6;
-		this.hasKey = false;
-		this.closedExit = false;
+		this.sceneState = MyScene.NO_ACTION;	// Estado actual de la escena
+		this.hasCoins = false;					// Determina si se poseen las monedas
+		this.numCoins = 0;						// Número de monedas insertadas
+		this.CORRECT_COINS = 6;					// Número de monedas a insertar
+		this.hasKey = false;					// Determina si se posee la llave
+		this.closedExit = false;				// Determina si la salida está cerrada
 
 		//controla que se hayan creado el audio listener y los audio sources
 		this.soundCreated = false;
@@ -57,14 +61,17 @@ class MyScene extends THREE.Scene {
 		// this.renderer.shadowMap.type = THREE.PCFShadowMap;
 		this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
+		// Para ver las estadísticas de rendimiento
 		this.initStats();
 
+		// Rayo para calcular las colisiones (se crea una sola vez y se reutiliza)
 		this.raycaster = new THREE.Raycaster();
 
 		// Construimos los distinos elementos que tendremos en la escena
 
-		// Todo elemento que se desee sea tenido en cuenta en el renderizado de la escena debe pertenecer a esta. Bien como hijo de la escena (this en esta clase) o como hijo de un elemento que ya esté en la escena.
-		// Tras crear cada elemento se añadirá a la escena con   this.add(variable)
+		// Todo elemento que se desee sea tenido en cuenta en el renderizado de la escena debe pertenecer a esta.
+		// Bien como hijo de la escena (this en esta clase) o como hijo de un elemento que ya esté en la escena.
+		// Tras crear cada elemento se añadirá a la escena con this.add(variable)
 		this.createLights ();
 
 		// Tendremos una cámara con un control de movimiento con el ratón
@@ -79,9 +86,6 @@ class MyScene extends THREE.Scene {
 		// Array de candelabros
 		this.candles = [];
 
-		// Número de monedas insertadas
-		this.numCoins = 0;
-
 		// Creamos reloj de actualizaciones
 		this.clock = new THREE.Clock();
 
@@ -89,10 +93,13 @@ class MyScene extends THREE.Scene {
 		this.axis = new THREE.AxesHelper (5);
 		// this.add (this.axis);
 
+		// ------------------------------------------------------------------------------------- //
+
 		// Por último creamos el modelo.
 		
-		// Creación de la iglesia
+		// Creación de la iglesia (modelo cargado de disco)
 		var church = new Church ();
+		// Cajas englobantes (para colisiones)
 		church.bb0 = new THREE.Box3(new THREE.Vector3(-31,0,-30),new THREE.Vector3(-30,10,120));//pared izquierda
 		church.bb1 = new THREE.Box3(new THREE.Vector3(30,0,-30),new THREE.Vector3(31,10,-8));
 		church.bb2 = new THREE.Box3(new THREE.Vector3(-30,0,-40),new THREE.Vector3(30,10,-30));
@@ -124,39 +131,43 @@ class MyScene extends THREE.Scene {
 
 		// genShadows(church);
 
-		// Creación de la fachada
+		// Creación de la fachada (modelo cargado de disco)
 		var fachade = new Fachade ();
 
-		// Creación de las puertas
-		this.doorOffsetX = 8.2;
-		this.doorOffsetZ = 0.3;
+		// Creación de las puertas (modelo cargado de disco)
+		this.doorOffsetX = 8.2;												// Desplazamiento en X
+		this.doorOffsetZ = 0.3;												// Desplazamiento en Z
+
+		// Puerta izquierda (modelo cargado de disco)
 		this.doorLeft = new Door(true);
 		this.doorLeft.position.set(-this.doorOffsetX,0,this.doorOffsetZ);
 		this.doorHingeLeft = new THREE.Object3D();
 		this.doorHingeLeft.position.set(this.doorOffsetX,0,35.3);
 		this.doorHingeLeft.rotation.y = Math.PI/4;
+
+		// Puerta derecha (modelo cargado de disco)
 		this.doorRight = new Door();
 		this.doorRight.scale.x=-1;
 		this.doorRight.position.set(this.doorOffsetX,0,this.doorOffsetZ);
 		this.doorHingeRight = new THREE.Object3D();
 		this.doorHingeRight.position.set(-this.doorOffsetX,0,35.3);
 		this.doorHingeRight.rotation.y = -Math.PI/4;
+		
 		this.doorHingeLeft.add(this.doorLeft);
 		this.doorHingeRight.add(this.doorRight);
-		// this.doorHingeLeft.rotation.y = Math.PI/2;
-		this.setupKey(this.doorLeft);
+		this.setupKey(this.doorLeft);										// Creación de la llave de la puerta
 
-		// Creación de árboles
+		// Creación de árboles (modelo cargado de disco)
 		this.setupTrees();
 
-		// Creación del suelo
+		// Creación del suelo (modelo cargado de disco)
 		var ground = new Ground()
 		this.add(ground);
 		// ground.rotation.y = Math.PI/2;
 		ground.position.set(0,-0.5,0);
 		// ground.scale.set(3,3,3);
 
-		// Creación de columnas y candelabros
+		// Creación de columnas y candelabros (modelos cargados de disco)
 		var columnSeparation = 21;
 		var columnSize = 1.5;
 		for(var i = 0; i < 5; i++)
@@ -169,19 +180,12 @@ class MyScene extends THREE.Scene {
 			var max1 = new THREE.Vector3(columnSize-columnSeparation,2,columnSize+i*9-15);
 			columna.boundingBox0 = new THREE.Box3(min0,max0);
 			columna.boundingBox1 = new THREE.Box3(min1,max1);
-			
-			// columna.boundingBoxHelper0 = new THREE.Box3Helper (columna.boundingBox0, 0xffff00);
-			// columna.boundingBoxHelper1 = new THREE.Box3Helper (columna.boundingBox1, 0xffff00);
-			// this.add(columna.boundingBoxHelper0);
-			// this.add(columna.boundingBoxHelper1);
 
-			// columna.boundingBoxHelper0.visible = true;
-			// columna.boundingBoxHelper1.visible = true;
 			this.add (columna);
 			this.collisionBoxArray.push(columna.boundingBox0);
 			this.collisionBoxArray.push(columna.boundingBox1);
 
-			// candles
+			// Candelabros
 			var candle0 = new Candle(pointShadows);
 			var candle1 = new Candle(pointShadows);
 			candle0.position.set(0,0,i*9-15);
@@ -195,11 +199,13 @@ class MyScene extends THREE.Scene {
 			this.pickableObjects.push(candle1);
 		}
 
-		// Creacion de la mesa
+		// Creación de la mesa con las monedas
+		// (mesa: modelo cargado de disco, monedas: modelo de three usando texturas con transparencia y normales para relieve)
 		this.table = new Table();
 		this.table.scale.set(0.6,0.6,0.6);
 		this.table.position.set(38,0,-2);
 
+		// Cajas englobantes (para colisiones)
 		this.table.bb = new THREE.Box3 (
 			new THREE.Vector3 (-0.3+this.table.position.x, 0, -0.3+this.table.position.z),
 			new THREE.Vector3 (0.3+this.table.position.x, 0.6, 0.3+this.table.position.z)
@@ -208,13 +214,12 @@ class MyScene extends THREE.Scene {
 
 		this.pickableObjects.push (this.table.coins);
 
-		// Creacion del cuadro
+		// Creacion del cuadro (modelo cargado de disco)
 		var painting = new Painting();
 		painting.position.set(-29.5,4,-5);
 		painting.rotation.set(0,Math.PI/2,0);
 
-		// Creacion de la puerta secreta
-
+		// Creacion de la puerta secreta (modelo cargado de disco)
 		var secretDoor = new SecretDoor();
 		var wall = new SecretDoor();
 		secretDoor.position.set(31,0,-7);
@@ -224,16 +229,16 @@ class MyScene extends THREE.Scene {
 
 		this.setupSecretDoor(secretDoor);
 
-		// Creación del reloj (modelo jerárquico)
+		// Creación del reloj (modelo jerárquico - cargado de disco)
 		this.clockModel = new Clock ();
 		this.clockModel.position.set(29,0,2);
 		this.clockModel.boundingBox = new THREE.Box3(new THREE.Vector3(-1+29,0,-1+2),new THREE.Vector3(1+29,2,1+2));
 		this.collisionBoxArray.push(this.clockModel.boundingBox);
 
-		this.pickableObjects.push(this.clockModel.getHandMinutes());//He intentado usar bounding box pero da error el raycaster !!!!
+		this.pickableObjects.push(this.clockModel.getHandMinutes());
 		this.pickableObjects.push(this.clockModel.getHandHours());
 
-		// Creación de bancos
+		// Creación de bancos (modelo de three - diferentes técnicas)
 		var benchScale = 0.18;
 		var benchSeparation = 10;
 		for(var i = 0; i < 10; i++)
@@ -246,9 +251,6 @@ class MyScene extends THREE.Scene {
 				bench.scale.set (benchScale, benchScale, benchScale);
 				
 				bench.boundingBox = new THREE.Box3 ().setFromObject (bench);
-				// bench.boundingBoxHelper = new THREE.Box3Helper (bench.boundingBox, 0xffff00);
-				// this.add (bench.boundingBoxHelper);
-				// bench.boundingBoxHelper.visible = true;
 
 				this.add (bench);
 
@@ -256,36 +258,28 @@ class MyScene extends THREE.Scene {
 			}
 		}
 
-		// Creación del lampadario
+		// Creación del lampadario (modelo de three - diferentes técnicas)
 		this.chandelier = new Chandelier (8, 4.0*Math.PI/9.0,pointShadows);
 		this.chandelier.position.set (-29.5, 0.0, 10.0);
 		this.chandelier.rotation.set (0.0, Math.PI/2.0, 0.0);
 		this.chandelier.scale.set (0.15, 0.15, 0.15);
 
-		//this.add (new THREE.CameraHelper (this.chandelier.pointLights[0].shadow.camera));
-		//this.add (new THREE.CameraHelper (this.chandelier.pointLights[1].shadow.camera));
-		//this.add (new THREE.CameraHelper (this.chandelier.pointLights[2].shadow.camera));
-
 		this.chandelier.boundingBox = new THREE.Box3 ().setFromObject (this.chandelier);
-		//this.chandelier.boundingBoxHelper = new THREE.Box3Helper (this.chandelier.boundingBox, 0xffff00);
-		//this.add (this.chandelier.boundingBoxHelper);
-		//this.chandelier.boundingBoxHelper.visible = true;
 
 		this.collisionBoxArray.push (this.chandelier.boundingBox);
 		this.pickableObjects.push (this.chandelier.moneyBox);
 
-		// Creación de la llave
+		// Creación de la llave (modelo cargado de disco)
 		var key = new Key();
 		key.position.set(this.clockModel.position.x,0.59,this.clockModel.position.z);
 		this.pickableObjects.push(key);
-		// key.position.set(29,0.8,1);
 
-		// Creación de la silueta del cadáver
+		// Creación de la silueta del cadáver (modelo de three usando texturas con transparencias y normales para relieve)
 		var deadBody = new DeadBody ();
 		deadBody.scale.set (0.6, 0.6, 0.6);
 		deadBody.position.set (0.0, 0.0, -16.0);
 
-		// Creacion del dibujo
+		// Creacion del dibujo (modelo de three con texturas)
 		var drawing = new Paper();
 		drawing.position.set(4,0.001,-15);
 		drawing.rotation.y = 1;
@@ -293,6 +287,7 @@ class MyScene extends THREE.Scene {
 		this.pickableObjects.push (this.minusSelector);
 		this.pickableObjects.push (this.plusSelector);
 
+		// Se añaden todos los elementos creados a la escena
 		this.add (church);
 		this.add (fachade);
 		this.add (this.clockModel);
@@ -306,7 +301,7 @@ class MyScene extends THREE.Scene {
 		this.add (painting);
 	}
 
-	setBG()
+	setBG ()
 	{
 		const loader = new THREE.CubeTextureLoader();
 		const texture = loader.load([
@@ -327,13 +322,16 @@ class MyScene extends THREE.Scene {
 		// this.fog = new THREE.FogExp2(texture, density);
 	}
 
-	setupSecretDoor(secretDoor)
+	setupSecretDoor (secretDoor)
 	{
 		this.secretDoorActivated = false;
 
 		var bb = new THREE.Box3(new THREE.Vector3(30,0,-8),new THREE.Vector3(30,10,1));
 		this.collisionBoxArray.push(bb);
 
+		// Animación para simular la apertura de la puerta secreta
+		//   - Se realiza un desplazamiento en el eje X
+		//   - Se realiza un desplazamiento en el eje Z
 		var origenPosicionX = {p:secretDoor.position.x}
 		var destinoPosicionX = {p:secretDoor.position.x+0.5}
 
@@ -356,10 +354,12 @@ class MyScene extends THREE.Scene {
 		this.secretDoorAnim[0].chain(this.secretDoorAnim[1]);
 	}
 
-	setupKey(door)
+	setupKey (door)
 	{
+		// Caja englobante de la salida
 		this.exitBB = new THREE.Box3(new THREE.Vector3(-8,0,35),new THREE.Vector3(8,10,40));
 
+		// Creación de la llave de la puerta
 		this.doorKey = new Key();
 
 		this.doorKey.position.set(1.184,-10,this.doorKey.rotation.z-1);
@@ -368,14 +368,17 @@ class MyScene extends THREE.Scene {
 
 		this.pickableObjects.push(door.lock);
 
-
-		var origenPosicion = {p:this.doorKey.position.z}
+		// Animación de la puerta: se construyen varias animaciones
+		//   1. Para simular que se introduce la llave en el cerrojo
+		//   2. Para el giro de la llave en el cerrojo
+		//   3. Para la apertura de las puertas
+		var origenPosicion = {p:this.doorKey.position.z} // 1
 		var destinoPosicion = {p:door.lock.position.z-0.5}
 
-		var origenRotacion = {p:this.doorKey.rotation.z}
+		var origenRotacion = {p:this.doorKey.rotation.z} // 2
 		var destinoRotacion = {p:0}
 
-		var origenPuerta = {p:0}
+		var origenPuerta = {p:0} // 3
 		var destinoPuerta = {p:Math.PI/2}
 
 		this.openDoorAnim = [];
@@ -401,6 +404,7 @@ class MyScene extends THREE.Scene {
 				this.exitBB.min = new THREE.Vector3(0,0,0);
 			}));
 
+		// Se encadenan las animaciones
 		this.openDoorAnim[0].chain(this.openDoorAnim[1]);
 		this.openDoorAnim[1].chain(this.openDoorAnim[2]);
 
@@ -427,7 +431,6 @@ class MyScene extends THREE.Scene {
 
 			this.soundAmbient.setVolume( 0.02 );
 		}));
-		
 	}
 
 	setupTrees()
@@ -476,6 +479,12 @@ class MyScene extends THREE.Scene {
 	}
 
 	createCamera () {
+		// Para crear la cámara y poder hacer un uso natural vamos a crear una serie de objetos
+		// a los que se les aplicará diferentes transformaciones que nos permitan
+		// movernos por la escena y mirar alrededor:
+		//   - Instancia de la cámara en perspectiva
+		//   - Objeto de la cámara que gestiona las rotaciones
+		//   - Objeto del jugador que gestiona el movimiento
 		// Para crear una cámara le indicamos
 		//   El ángulo del campo de visión en grados sexagesimales
 		//   La razón de aspecto ancho/alto
